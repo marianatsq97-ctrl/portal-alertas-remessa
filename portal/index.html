@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Alertas – Remessas</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Alertas – Remessas</h1>
+      <div id="meta" class="meta">Carregando…</div>
+    </div>
+
+    <button id="bell" class="bell" title="Mostrar Plano de Ação">
+      🔔 <span id="badge" class="badge">0</span>
+    </button>
+  </header>
+
+  <section class="controls">
+    <label>
+      Status:
+      <select id="statusFilter">
+        <option value="TODOS">Todos</option>
+        <option value="OK">OK (0–4)</option>
+        <option value="ATENCAO">Atenção (5–7)</option>
+        <option value="PLANO_DE_ACAO">Plano de ação (&gt; 7)</option>
+      </select>
+    </label>
+
+    <label>
+      Buscar:
+      <input id="search" placeholder="código ou nome…" />
+    </label>
+
+    <button id="refresh">Atualizar</button>
+  </section>
+
+  <section id="summary" class="summary"></section>
+
+  <section class="tableWrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Cliente</th>
+          <th>Última remessa</th>
+          <th>Dias</th>
+          <th>Status</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
