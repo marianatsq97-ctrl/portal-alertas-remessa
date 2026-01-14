@@ -1,0 +1,24 @@
+name: Processar SQL42
+
+on:
+  push:
+    paths:
+      - "data/**"
+      - "scripts/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pandas openpyxl
+      - run: python scripts/gerar_alertas_sql42.py
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add portal/alerts.json
+          git commit -m "Atualiza alerts.json" || echo "Nada mudou"
+          git push
