@@ -1,33 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>Portal de Alertas – Remessas</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Portal de Alertas – Remessas</h1>
+<div class="container">
+  <h1>Portal de Alertas – Remessas</h1>
+  <p class="sub">Monitoramento automático de clientes sem remessa</p>
 
-<select id="statusFilter">
-  <option value="TODOS">Todos</option>
-  <option value="OK">OK</option>
-  <option value="ATENCAO">Atenção</option>
-  <option value="PLANO_DE_ACAO">Plano de ação</option>
-</select>
+  <div class="controls">
+    <label>Status:</label>
+    <select id="statusFilter">
+      <option value="TODOS">Todos</option>
+      <option value="OK">OK</option>
+      <option value="ATENCAO">Atenção</option>
+      <option value="PLANO_DE_ACAO">Plano de ação</option>
+    </select>
+  </div>
 
-<table border="1">
-  <thead>
-    <tr>
-      <th>Código</th>
-      <th>Cliente</th>
-      <th>Última remessa</th>
-      <th>Dias</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="lista"></tbody>
-</table>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Cliente</th>
+          <th>Última remessa</th>
+          <th>Dias</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
