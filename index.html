@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>Portal de Alertas – Remessas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Portal de Alertas – Remessas</h1>
+  <div id="bell">🔔 <span id="count">0</span></div>
+</header>
+
+<section>
+  <label>Status:
+    <select id="statusFilter">
+      <option value="TODOS">Todos</option>
+      <option value="OK">OK</option>
+      <option value="ATENCAO">Atenção (5–7)</option>
+      <option value="PLANO_DE_ACAO">Plano de ação (&gt;7)</option>
+    </select>
+  </label>
+</section>
+
+<table>
+  <thead>
+    <tr>
+      <th>Código</th>
+      <th>Cliente</th>
+      <th>Última remessa</th>
+      <th>Dias</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody id="lista"></tbody>
+</table>
+
+<script src="app.js"></script>
+</body>
+</html>
