@@ -1,7 +1,3 @@
 {
-  "gerado_em": "0000-00-00",
-  "total_clientes": 0,
-  "contagem_status": { "OK": 0, "ATENCAO": 0, "PLANO_DE_ACAO": 0 },
-  "total_plano_de_acao": 0,
   "registros": []
 }
