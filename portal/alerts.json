@@ -1,11 +1,3 @@
 {
-  "registros": [
-    {
-      "CodCliente": "999",
-      "NomeCliente": "CLIENTE TESTE",
-      "DataUltimaRemessa": "2026-01-01",
-      "DiasSemRemessa": 13,
-      "Status": "PLANO_DE_ACAO"
-    }
-  ]
+  "registros": []
 }
