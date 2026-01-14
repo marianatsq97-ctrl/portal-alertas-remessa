@@ -1,0 +1,8 @@
+body {
+  font-family: Arial;
+  padding: 20px;
+}
+
+.OK { color: green; }
+.ATENCAO { color: orange; }
+.PLANO_DE_ACAO { color: red; }
