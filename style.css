@@ -1,46 +1,30 @@
 body {
-  margin: 0;
-  background: radial-gradient(circle at top, #111, #000);
-  font-family: "Segoe UI", sans-serif;
+  background: #0e0e0e;
   color: #fff;
+  font-family: Arial, sans-serif;
 }
 
-.glass {
+.container {
   max-width: 1200px;
-  margin: 50px auto;
-  padding: 40px;
-  background: rgba(20,20,20,0.9);
-  border-radius: 20px;
-  box-shadow: 0 0 80px rgba(255,140,0,0.2);
-}
-
-.subtitle {
-  color: #ccc;
-}
-
-input, select {
-  padding: 10px;
-  margin: 10px 10px 20px 0;
-  border-radius: 8px;
-  border: none;
+  margin: auto;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-top: 20px;
 }
 
-th {
-  background: #ff7a00;
+thead {
+  background: orange;
   color: #000;
-  padding: 12px;
 }
 
-td {
-  padding: 12px;
+td, th {
+  padding: 10px;
   border-bottom: 1px solid #333;
 }
 
-.status-OK { color: #2ecc71; }
-.status-ATENCAO { color: #f1c40f; }
-.status-PLANO { color: #e74c3c; }
+.OK { color: #00ff88; }
+.ATENCAO { color: #ffd000; }
+.CRITICO { color: #ff4d4d; }
