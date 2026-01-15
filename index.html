@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <title>Portal de Alertas – Remessas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- CSS -->
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="style.css">
 
-  <!-- XLSX (Excel no navegador) -->
+  <!-- XLSX -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- Chart.js -->
@@ -16,49 +16,69 @@
 </head>
 
 <body>
-  <div class="container">
 
+  <!-- HOME -->
+  <section id="home" class="panel active">
     <h1>Portal de Alertas – Remessas</h1>
     <p class="subtitle">Controle de clientes sem remessa</p>
 
-    <!-- ABAS -->
-    <div class="tabs">
-      <button class="tab active" data-tab="dados">Dados</button>
-      <button class="tab" data-tab="visualizacao">Visualização</button>
+    <div class="info-box">
+      Escolha uma área e clique para abrir o painel ou sistema.
     </div>
 
-    <!-- ABA DADOS -->
-    <section id="dados" class="tab-content active">
-      <input type="file" id="fileInput" accept=".xlsx" />
+    <div class="menu">
+      <button onclick="openPanel('visualizacao')">Visualização</button>
+      <button onclick="openPanel('dados')">Dados</button>
+    </div>
+  </section>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Material</th>
-            <th>Última Remessa</th>
-            <th>Quantidade</th>
-            <th>Dias sem remessa</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </section>
+  <!-- VISUALIZAÇÃO -->
+  <section id="visualizacao" class="panel">
+    <button class="back" onclick="openPanel('home')">← Voltar</button>
 
-    <!-- ABA VISUALIZAÇÃO -->
-    <section id="visualizacao" class="tab-content">
-      <div class="cards">
-        <div class="card ok">OK: <span id="okCount">0</span></div>
-        <div class="card atencao">Atenção: <span id="atencaoCount">0</span></div>
-        <div class="card critico">Plano de ação: <span id="criticoCount">0</span></div>
+    <h2>Resumo Geral</h2>
+
+    <div class="cards">
+      <div class="card ok">
+        <h3>OK</h3>
+        <span id="count-ok">0</span>
       </div>
+      <div class="card warn">
+        <h3>Atenção</h3>
+        <span id="count-warn">0</span>
+      </div>
+      <div class="card danger">
+        <h3>Plano de ação</h3>
+        <span id="count-danger">0</span>
+      </div>
+    </div>
 
-      <canvas id="graficoStatus"></canvas>
-    </section>
+    <canvas id="chart" height="120"></canvas>
+  </section>
 
-  </div>
+  <!-- DADOS -->
+  <section id="dados" class="panel">
+    <button class="back" onclick="openPanel('home')">← Voltar</button>
 
-  <script src="./app.js"></script>
+    <h2>Importação e Detalhamento</h2>
+
+    <input type="file" id="fileInput" accept=".xlsx">
+
+    <table>
+      <thead>
+        <tr>
+          <th onclick="filterColumn(0)">Cliente ⌄</th>
+          <th onclick="filterColumn(1)">Material ⌄</th>
+          <th onclick="filterColumn(2)">Última Remessa ⌄</th>
+          <th onclick="filterColumn(3)">Quantidade ⌄</th>
+          <th onclick="filterColumn(4)">Dias sem remessa ⌄</th>
+          <th onclick="filterColumn(5)">Status ⌄</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </section>
+
+  <script src="app.js"></script>
 </body>
 </html>
