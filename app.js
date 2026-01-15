@@ -1,93 +1,82 @@
-let dadosGlobais = [];
+let data = [];
+let chart;
 
-document.getElementById("fileInput").addEventListener("change", e => {
-  const file = e.target.files[0];
+function openPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+document.getElementById('fileInput').addEventListener('change', e => {
   const reader = new FileReader();
-
   reader.onload = evt => {
-    const workbook = XLSX.read(evt.target.result, { type: "binary" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet);
+    const wb = XLSX.read(evt.target.result, { type: 'binary' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    data = XLSX.utils.sheet_to_json(sheet);
 
-    processarDados(json);
+    renderTable(data);
+    updateDashboard(data);
   };
-
-  reader.readAsBinaryString(file);
+  reader.readAsBinaryString(e.target.files[0]);
 });
 
-function processarDados(linhas) {
-  const hoje = new Date();
-  dadosGlobais = [];
+function renderTable(rows) {
+  const body = document.getElementById('tableBody');
+  body.innerHTML = '';
 
-  linhas.forEach(l => {
-    if (!l.Cliente || !l["Última Remessa"]) return;
+  rows.forEach(r => {
+    const last = new Date(r["Última Remessa"]);
+    const days = Math.floor((new Date() - last) / 86400000);
 
-    const ultima = new Date(l["Última Remessa"]);
-    const dias = Math.floor((hoje - ultima) / (1000 * 60 * 60 * 24));
+    let status = days <= 4 ? "OK" : days <= 7 ? "Atenção" : "Plano de ação";
 
-    let status = "OK";
-    if (dias >= 5 && dias <= 7) status = "Atenção";
-    if (dias > 7) status = "Plano de ação";
-
-    dadosGlobais.push({
-      cliente: l.Cliente,
-      material: l.Material || "-",
-      data: ultima.toLocaleDateString(),
-      quantidade: l.Quantidade || 0,
-      dias,
-      status
-    });
-  });
-
-  renderTabela();
-  renderDashboard();
-}
-
-function renderTabela() {
-  const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = "";
-
-  dadosGlobais.forEach(d => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${d.cliente}</td>
-      <td>${d.material}</td>
-      <td>${d.data}</td>
-      <td>${d.quantidade}</td>
-      <td>${d.dias}</td>
-      <td>${d.status}</td>
-    `;
-    tbody.appendChild(tr);
+    body.innerHTML += `
+      <tr>
+        <td>${r.Cliente}</td>
+        <td>${r.Material || "-"}</td>
+        <td>${r["Última Remessa"]}</td>
+        <td>${r.Quantidade || "-"}</td>
+        <td>${days}</td>
+        <td>${status}</td>
+      </tr>`;
   });
 }
 
-function renderDashboard() {
-  const ok = dadosGlobais.filter(d => d.status === "OK").length;
-  const atencao = dadosGlobais.filter(d => d.status === "Atenção").length;
-  const critico = dadosGlobais.filter(d => d.status === "Plano de ação").length;
+function updateDashboard(rows) {
+  let ok = 0, warn = 0, danger = 0;
 
-  document.getElementById("okCount").textContent = ok;
-  document.getElementById("atencaoCount").textContent = atencao;
-  document.getElementById("criticoCount").textContent = critico;
+  rows.forEach(r => {
+    const days = Math.floor((new Date() - new Date(r["Última Remessa"])) / 86400000);
+    if (days <= 4) ok++;
+    else if (days <= 7) warn++;
+    else danger++;
+  });
 
-  new Chart(document.getElementById("graficoStatus"), {
-    type: "bar",
+  document.getElementById('count-ok').textContent = ok;
+  document.getElementById('count-warn').textContent = warn;
+  document.getElementById('count-danger').textContent = danger;
+
+  const ctx = document.getElementById('chart');
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: 'bar',
     data: {
-      labels: ["OK", "Atenção", "Plano de ação"],
+      labels: ['OK', 'Atenção', 'Plano de ação'],
       datasets: [{
-        data: [ok, atencao, critico],
-        backgroundColor: ["#1e7f43", "#b58900", "#a83232"]
+        data: [ok, warn, danger],
+        backgroundColor: ['#00ff99', '#ffcc00', '#ff4444']
       }]
     }
   });
 }
 
-// Abas
-document.querySelectorAll(".tab").forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(btn.dataset.tab).classList.add("active");
-  };
-});
+function filterColumn(index) {
+  const value = prompt("Digite o valor para filtrar:");
+  if (!value) return;
+
+  const filtered = data.filter(r =>
+    Object.values(r)[index]?.toString().toLowerCase().includes(value.toLowerCase())
+  );
+
+  renderTable(filtered);
+}
