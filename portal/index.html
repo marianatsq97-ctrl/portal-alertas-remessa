@@ -1,42 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Portal de Alertas – Remessas</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
 
-<div class="container">
-  <h1>Portal de Alertas – Remessas</h1>
-  <p class="sub">Monitoramento automático de clientes sem remessa</p>
-
-  <div class="controls">
-    <label>Status:</label>
-    <select id="statusFilter">
-      <option value="TODOS">Todos</option>
-      <option value="OK">OK</option>
-      <option value="ATENCAO">Atenção</option>
-      <option value="PLANO_DE_ACAO">Plano de ação</option>
-    </select>
+  <div class="container">
+    <h1>Portal de Alertas – Remessas</h1>
+    <div id="cards"></div>
   </div>
 
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>Código</th>
-          <th>Cliente</th>
-          <th>Última remessa</th>
-          <th>Dias</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="lista"></tbody>
-    </table>
-  </div>
-</div>
-
-<script src="app.js"></script>
+  <!-- JS -->
+  <script src="./app.js"></script>
 </body>
 </html>
