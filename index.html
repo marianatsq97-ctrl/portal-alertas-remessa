@@ -1,84 +1,72 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Portal de Alertas – Remessas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- XLSX -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Chart.js -->
+  <!-- LIBS OBRIGATÓRIAS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
-  <!-- HOME -->
-  <section id="home" class="panel active">
-    <h1>Portal de Alertas – Remessas</h1>
-    <p class="subtitle">Controle de clientes sem remessa</p>
+<header>
+  <h1>Portal de Alertas – Remessas</h1>
+  <p>Controle de clientes sem remessa</p>
+</header>
 
-    <div class="info-box">
-      Escolha uma área e clique para abrir o painel ou sistema.
+<section class="menu">
+  <button onclick="abrir('visualizacao')">Visualização</button>
+  <button onclick="abrir('dados')">Dados</button>
+</section>
+
+<!-- VISUALIZAÇÃO -->
+<section id="visualizacao" class="painel">
+  <h2>Resumo Geral</h2>
+
+  <div class="cards">
+    <div class="card ok">
+      <h3>OK</h3>
+      <span id="ok">0</span>
     </div>
-
-    <div class="menu">
-      <button onclick="openPanel('visualizacao')">Visualização</button>
-      <button onclick="openPanel('dados')">Dados</button>
+    <div class="card atencao">
+      <h3>Atenção</h3>
+      <span id="atencao">0</span>
     </div>
-  </section>
-
-  <!-- VISUALIZAÇÃO -->
-  <section id="visualizacao" class="panel">
-    <button class="back" onclick="openPanel('home')">← Voltar</button>
-
-    <h2>Resumo Geral</h2>
-
-    <div class="cards">
-      <div class="card ok">
-        <h3>OK</h3>
-        <span id="count-ok">0</span>
-      </div>
-      <div class="card warn">
-        <h3>Atenção</h3>
-        <span id="count-warn">0</span>
-      </div>
-      <div class="card danger">
-        <h3>Plano de ação</h3>
-        <span id="count-danger">0</span>
-      </div>
+    <div class="card plano">
+      <h3>Plano de ação</h3>
+      <span id="plano">0</span>
     </div>
+  </div>
 
-    <canvas id="chart" height="120"></canvas>
-  </section>
+  <canvas id="grafico"></canvas>
+</section>
 
-  <!-- DADOS -->
-  <section id="dados" class="panel">
-    <button class="back" onclick="openPanel('home')">← Voltar</button>
+<!-- DADOS -->
+<section id="dados" class="painel oculto">
+  <h2>Importação e Detalhamento</h2>
 
-    <h2>Importação e Detalhamento</h2>
+  <input type="file" id="fileInput" accept=".xlsx">
+  <button onclick="excluirArquivo()">Excluir arquivo</button>
 
-    <input type="file" id="fileInput" accept=".xlsx">
+  <table>
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Contrato</th>
+        <th>Vendedor</th>
+        <th>Traço</th>
+        <th>Última remessa</th>
+        <th>Dias sem remessa</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</section>
 
-    <table>
-      <thead>
-        <tr>
-          <th onclick="filterColumn(0)">Cliente ⌄</th>
-          <th onclick="filterColumn(1)">Material ⌄</th>
-          <th onclick="filterColumn(2)">Última Remessa ⌄</th>
-          <th onclick="filterColumn(3)">Quantidade ⌄</th>
-          <th onclick="filterColumn(4)">Dias sem remessa ⌄</th>
-          <th onclick="filterColumn(5)">Status ⌄</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </section>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
