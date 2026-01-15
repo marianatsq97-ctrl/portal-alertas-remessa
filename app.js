@@ -1,82 +1,102 @@
-let data = [];
-let chart;
+let dados = [];
 
-function openPanel(id) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+function abrir(painel) {
+  document.getElementById("visualizacao").classList.add("oculto");
+  document.getElementById("dados").classList.add("oculto");
+  document.getElementById(painel).classList.remove("oculto");
 }
 
-document.getElementById('fileInput').addEventListener('change', e => {
+document.getElementById("fileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
   const reader = new FileReader();
   reader.onload = evt => {
-    const wb = XLSX.read(evt.target.result, { type: 'binary' });
+    const wb = XLSX.read(evt.target.result, { type: "binary" });
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    data = XLSX.utils.sheet_to_json(sheet);
+    const json = XLSX.utils.sheet_to_json(sheet);
 
-    renderTable(data);
-    updateDashboard(data);
+    dados = json.map(l => tratarLinha(l));
+    localStorage.setItem("sql42", JSON.stringify(dados));
+
+    render();
   };
-  reader.readAsBinaryString(e.target.files[0]);
+  reader.readAsBinaryString(file);
 });
 
-function renderTable(rows) {
-  const body = document.getElementById('tableBody');
-  body.innerHTML = '';
+function tratarLinha(l) {
+  const data = new Date(l["DATA DA REMESSA"]);
+  const hoje = new Date();
+  const dias = Math.floor((hoje - data) / 86400000);
 
-  rows.forEach(r => {
-    const last = new Date(r["Última Remessa"]);
-    const days = Math.floor((new Date() - last) / 86400000);
+  let status = "OK";
+  if (dias > 7) status = "Plano de ação";
+  else if (dias >= 5) status = "Atenção";
 
-    let status = days <= 4 ? "OK" : days <= 7 ? "Atenção" : "Plano de ação";
-
-    body.innerHTML += `
-      <tr>
-        <td>${r.Cliente}</td>
-        <td>${r.Material || "-"}</td>
-        <td>${r["Última Remessa"]}</td>
-        <td>${r.Quantidade || "-"}</td>
-        <td>${days}</td>
-        <td>${status}</td>
-      </tr>`;
-  });
+  return {
+    cliente: l.CLIENTE || "-",
+    contrato: l.CONTRATO || "-",
+    vendedor: l.VENDEDOR || "-",
+    traco: l.TRAÇO || "-",
+    dataFmt: data.toLocaleDateString("pt-BR"),
+    dias,
+    status
+  };
 }
 
-function updateDashboard(rows) {
-  let ok = 0, warn = 0, danger = 0;
+function render() {
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
 
-  rows.forEach(r => {
-    const days = Math.floor((new Date() - new Date(r["Última Remessa"])) / 86400000);
-    if (days <= 4) ok++;
-    else if (days <= 7) warn++;
-    else danger++;
+  dados.forEach(l => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${l.cliente}</td>
+        <td>${l.contrato}</td>
+        <td>${l.vendedor}</td>
+        <td>${l.traco}</td>
+        <td>${l.dataFmt}</td>
+        <td>${l.dias}</td>
+        <td class="${l.status}">${l.status}</td>
+      </tr>
+    `;
   });
 
-  document.getElementById('count-ok').textContent = ok;
-  document.getElementById('count-warn').textContent = warn;
-  document.getElementById('count-danger').textContent = danger;
+  document.getElementById("ok").innerText = dados.filter(d => d.status === "OK").length;
+  document.getElementById("atencao").innerText = dados.filter(d => d.status === "Atenção").length;
+  document.getElementById("plano").innerText = dados.filter(d => d.status === "Plano de ação").length;
 
-  const ctx = document.getElementById('chart');
-  if (chart) chart.destroy();
+  gerarGrafico();
+}
 
-  chart = new Chart(ctx, {
-    type: 'bar',
+function gerarGrafico() {
+  const ctx = document.getElementById("grafico");
+  if (!ctx) return;
+
+  const labels = dados.map(d => d.dataFmt);
+  const valores = dados.map(d => d.dias);
+
+  new Chart(ctx, {
+    type: "bar",
     data: {
-      labels: ['OK', 'Atenção', 'Plano de ação'],
+      labels,
       datasets: [{
-        data: [ok, warn, danger],
-        backgroundColor: ['#00ff99', '#ffcc00', '#ff4444']
+        label: "Dias sem remessa",
+        data: valores,
+        backgroundColor: "#ff8c00"
       }]
     }
   });
 }
 
-function filterColumn(index) {
-  const value = prompt("Digite o valor para filtrar:");
-  if (!value) return;
+function excluirArquivo() {
+  localStorage.removeItem("sql42");
+  location.reload();
+}
 
-  const filtered = data.filter(r =>
-    Object.values(r)[index]?.toString().toLowerCase().includes(value.toLowerCase())
-  );
-
-  renderTable(filtered);
+// 🔁 Persistência
+const salvo = localStorage.getItem("sql42");
+if (salvo) {
+  dados = JSON.parse(salvo);
+  render();
 }
