@@ -1,0 +1,35 @@
+[
+  {
+    "cliente": "Cliente Areia Azul",
+    "contrato": "C-1001",
+    "vendedor": "João",
+    "traco": "T-01",
+    "material": "Brita 1",
+    "ultimaRemessa": "2026-01-12T00:00:00.000Z",
+    "quantidade": 12,
+    "diasSemRemessa": 2,
+    "status": "OK"
+  },
+  {
+    "cliente": "Cliente Pedra Forte",
+    "contrato": "C-1002",
+    "vendedor": "Maria",
+    "traco": "T-02",
+    "material": "Areia Média",
+    "ultimaRemessa": "2026-01-08T00:00:00.000Z",
+    "quantidade": 7,
+    "diasSemRemessa": 6,
+    "status": "Atenção"
+  },
+  {
+    "cliente": "Cliente Construtora Delta",
+    "contrato": "C-1003",
+    "vendedor": "Carlos",
+    "traco": "T-03",
+    "material": "Concreto",
+    "ultimaRemessa": "2026-01-03T00:00:00.000Z",
+    "quantidade": 20,
+    "diasSemRemessa": 11,
+    "status": "Plano de ação"
+  }
+]
