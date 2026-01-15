@@ -1,68 +1,93 @@
-const fileInput = document.getElementById("fileInput");
-const tableBody = document.getElementById("tableBody");
-const statusFilter = document.getElementById("statusFilter");
+let dadosGlobais = [];
 
-let dados = [];
-
-fileInput.addEventListener("change", e => {
+document.getElementById("fileInput").addEventListener("change", e => {
   const file = e.target.files[0];
   const reader = new FileReader();
 
   reader.onload = evt => {
     const workbook = XLSX.read(evt.target.result, { type: "binary" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet);
+    const json = XLSX.utils.sheet_to_json(sheet);
 
-    dados = rows.map(linha => processarLinha(linha));
-    renderTabela();
+    processarDados(json);
   };
 
   reader.readAsBinaryString(file);
 });
 
-statusFilter.addEventListener("change", renderTabela);
-
-function processarLinha(linha) {
-  // 🔴 AJUSTE ESTES NOMES PARA O SEU SQL42
-  const cliente = linha["Cliente"];
-  const material = linha["Material"];
-  const quantidade = Number(linha["Quantidade"]) || 0;
-  const dataRemessa = new Date(linha["Data Remessa"]);
-
+function processarDados(linhas) {
   const hoje = new Date();
-  const dias = Math.floor((hoje - dataRemessa) / (1000 * 60 * 60 * 24));
+  dadosGlobais = [];
 
-  let status = "OK";
-  if (dias >= 5 && dias <= 7) status = "ATENCAO";
-  if (dias > 7) status = "CRITICO";
+  linhas.forEach(l => {
+    if (!l.Cliente || !l["Última Remessa"]) return;
 
-  return {
-    cliente,
-    material,
-    quantidade,
-    dataRemessa,
-    dias,
-    status
-  };
+    const ultima = new Date(l["Última Remessa"]);
+    const dias = Math.floor((hoje - ultima) / (1000 * 60 * 60 * 24));
+
+    let status = "OK";
+    if (dias >= 5 && dias <= 7) status = "Atenção";
+    if (dias > 7) status = "Plano de ação";
+
+    dadosGlobais.push({
+      cliente: l.Cliente,
+      material: l.Material || "-",
+      data: ultima.toLocaleDateString(),
+      quantidade: l.Quantidade || 0,
+      dias,
+      status
+    });
+  });
+
+  renderTabela();
+  renderDashboard();
 }
 
 function renderTabela() {
-  tableBody.innerHTML = "";
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
 
-  dados
-    .filter(d => statusFilter.value === "TODOS" || d.status === statusFilter.value)
-    .forEach(d => {
-      const tr = document.createElement("tr");
-
-      tr.innerHTML = `
-        <td>${d.cliente}</td>
-        <td>${d.material}</td>
-        <td>${d.dataRemessa.toLocaleDateString()}</td>
-        <td>${d.quantidade}</td>
-        <td>${d.dias}</td>
-        <td class="${d.status}">${d.status}</td>
-      `;
-
-      tableBody.appendChild(tr);
-    });
+  dadosGlobais.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.cliente}</td>
+      <td>${d.material}</td>
+      <td>${d.data}</td>
+      <td>${d.quantidade}</td>
+      <td>${d.dias}</td>
+      <td>${d.status}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
+
+function renderDashboard() {
+  const ok = dadosGlobais.filter(d => d.status === "OK").length;
+  const atencao = dadosGlobais.filter(d => d.status === "Atenção").length;
+  const critico = dadosGlobais.filter(d => d.status === "Plano de ação").length;
+
+  document.getElementById("okCount").textContent = ok;
+  document.getElementById("atencaoCount").textContent = atencao;
+  document.getElementById("criticoCount").textContent = critico;
+
+  new Chart(document.getElementById("graficoStatus"), {
+    type: "bar",
+    data: {
+      labels: ["OK", "Atenção", "Plano de ação"],
+      datasets: [{
+        data: [ok, atencao, critico],
+        backgroundColor: ["#1e7f43", "#b58900", "#a83232"]
+      }]
+    }
+  });
+}
+
+// Abas
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  };
+});
