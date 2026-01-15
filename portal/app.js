@@ -1,29 +1,31 @@
-async function carregar() {
-  const res = await fetch("alerts.json");
-  const data = await res.json();
+fetch("./alerts.json")
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("cards");
 
-  const tbody = document.getElementById("lista");
-  const filtro = document.getElementById("statusFilter");
+    data.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
 
-  function render() {
-    tbody.innerHTML = "";
-    data.registros.forEach(r => {
-      if (filtro.value !== "TODOS" && r.Status !== filtro.value) return;
+      let statusClass = "ok";
+      let statusText = "OK";
 
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.CodCliente}</td>
-        <td>${r.NomeCliente}</td>
-        <td>${r.DataUltimaRemessa}</td>
-        <td>${r.DiasSemRemessa}</td>
-        <td class="${r.Status}">${r.Status}</td>
+      if (item.dias >= 5 && item.dias <= 7) {
+        statusClass = "atencao";
+        statusText = "Atenção";
+      }
+
+      if (item.dias > 7) {
+        statusClass = "critico";
+        statusText = "Plano de Ação";
+      }
+
+      card.innerHTML = `
+        <h3>${item.cliente}</h3>
+        <p>Dias sem remessa: <strong>${item.dias}</strong></p>
+        <p class="status ${statusClass}">${statusText}</p>
       `;
-      tbody.appendChild(tr);
+
+      container.appendChild(card);
     });
-  }
-
-  filtro.addEventListener("change", render);
-  render();
-}
-
-carregar();
+  });
