@@ -1,72 +1,188 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Portal de Alertas – Remessas</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Alertas – Remessas</title>
+    <link rel="stylesheet" href="./style.css" />
 
-  <link rel="stylesheet" href="style.css">
+    <!-- Libs via CDN (sem instalar nada no repo) -->
+    <!-- SheetJS (ler XLSX no navegador) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+      defer
+    ></script>
 
-  <!-- LIBS OBRIGATÓRIAS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
+    <!-- Chart.js (gráficos) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+      defer
+    ></script>
 
-<header>
-  <h1>Portal de Alertas – Remessas</h1>
-  <p>Controle de clientes sem remessa</p>
-</header>
+    <script src="./app.js" defer></script>
+  </head>
 
-<section class="menu">
-  <button onclick="abrir('visualizacao')">Visualização</button>
-  <button onclick="abrir('dados')">Dados</button>
-</section>
+  <body>
+    <div class="bg"></div>
 
-<!-- VISUALIZAÇÃO -->
-<section id="visualizacao" class="painel">
-  <h2>Resumo Geral</h2>
+    <main class="container">
+      <header class="top">
+        <h1>Portal de Alertas – Remessas</h1>
+        <p class="subtitle">Controle de clientes sem remessa</p>
+      </header>
 
-  <div class="cards">
-    <div class="card ok">
-      <h3>OK</h3>
-      <span id="ok">0</span>
+      <!-- HOME -->
+      <section id="screen-home" class="screen active">
+        <div class="banner">
+          Escolha uma área e clique para abrir o painel ou sistema.
+        </div>
+
+        <div class="home-actions">
+          <button class="pill" id="btn-go-view">Visualização</button>
+          <button class="pill" id="btn-go-data">Dados</button>
+        </div>
+
+        <div class="hint">
+          Dica raiz: importa o XLSX na aba <b>Dados</b>. O sistema salva no navegador e não some ao atualizar.
+        </div>
+      </section>
+
+      <!-- VISUALIZAÇÃO -->
+      <section id="screen-view" class="screen">
+        <div class="screen-header">
+          <button class="back" id="btn-back-from-view">← Voltar</button>
+          <h2>Resumo Geral</h2>
+        </div>
+
+        <div class="cards" id="status-cards">
+          <!-- preenchido via JS -->
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Evolução de remessas</h3>
+
+            <div class="filters-row">
+              <label class="field">
+                <span>Ano</span>
+                <select id="f-year"></select>
+              </label>
+
+              <label class="field">
+                <span>Mês</span>
+                <select id="f-month"></select>
+              </label>
+
+              <div class="spacer"></div>
+
+              <button class="ghost" id="btn-refresh-chart">Atualizar gráfico</button>
+            </div>
+          </div>
+
+          <div class="chart-wrap">
+            <canvas id="chartRemessas"></canvas>
+          </div>
+
+          <div class="panel-foot">
+            <small id="view-meta" class="muted"></small>
+          </div>
+        </div>
+      </section>
+
+      <!-- DADOS -->
+      <section id="screen-data" class="screen">
+        <div class="screen-header">
+          <button class="back" id="btn-back-from-data">← Voltar</button>
+          <h2>Importação e Detalhamento</h2>
+        </div>
+
+        <div class="import-bar">
+          <div class="import-left">
+            <label class="file-btn">
+              <input id="file-input" type="file" accept=".xlsx,.xls" />
+              Escolher arquivo
+            </label>
+
+            <div class="file-meta">
+              <div id="file-name" class="file-name">Nenhum arquivo carregado</div>
+              <div id="file-sub" class="muted"></div>
+            </div>
+          </div>
+
+          <div class="import-right">
+            <button class="ghost" id="btn-load-demo">Carregar demo</button>
+            <button class="danger" id="btn-clear">Excluir arquivo</button>
+          </div>
+        </div>
+
+        <div class="table-tools">
+          <div class="mini">
+            <span class="tag">Filtros rápidos</span>
+            <label class="field inline">
+              <span>Status</span>
+              <select id="quick-status">
+                <option value="">Todos</option>
+                <option value="OK">OK</option>
+                <option value="Atenção">Atenção</option>
+                <option value="Plano de ação">Plano de ação</option>
+              </select>
+            </label>
+
+            <label class="field inline">
+              <span>Data mínima (última remessa)</span>
+              <input id="quick-date-min" type="date" />
+            </label>
+
+            <button class="ghost" id="btn-clear-filters">Limpar filtros</button>
+          </div>
+
+          <div class="mini right">
+            <span id="row-count" class="muted"></span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead id="thead"></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <div>
+            <div class="loading-title">Carregando…</div>
+            <div id="loading-sub" class="muted">Lendo XLSX e calculando alertas</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- POPUP de filtro por coluna -->
+    <div id="filter-pop" class="filter-pop hidden" role="dialog" aria-modal="true">
+      <div class="filter-head">
+        <div>
+          <div id="filter-title" class="filter-title">Filtro</div>
+          <div id="filter-subtitle" class="muted small"></div>
+        </div>
+        <button id="filter-close" class="xbtn">✕</button>
+      </div>
+
+      <div class="filter-body">
+        <input id="filter-search" class="filter-search" placeholder="Buscar…" />
+        <div class="filter-actions">
+          <button id="filter-all" class="ghost smallbtn">Marcar tudo</button>
+          <button id="filter-none" class="ghost smallbtn">Desmarcar</button>
+        </div>
+        <div id="filter-list" class="filter-list"></div>
+      </div>
+
+      <div class="filter-foot">
+        <button id="filter-cancel" class="ghost">Cancelar</button>
+        <button id="filter-apply" class="pill smallpill">Aplicar</button>
+      </div>
     </div>
-    <div class="card atencao">
-      <h3>Atenção</h3>
-      <span id="atencao">0</span>
-    </div>
-    <div class="card plano">
-      <h3>Plano de ação</h3>
-      <span id="plano">0</span>
-    </div>
-  </div>
 
-  <canvas id="grafico"></canvas>
-</section>
-
-<!-- DADOS -->
-<section id="dados" class="painel oculto">
-  <h2>Importação e Detalhamento</h2>
-
-  <input type="file" id="fileInput" accept=".xlsx">
-  <button onclick="excluirArquivo()">Excluir arquivo</button>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Cliente</th>
-        <th>Contrato</th>
-        <th>Vendedor</th>
-        <th>Traço</th>
-        <th>Última remessa</th>
-        <th>Dias sem remessa</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</section>
-
-<script src="app.js"></script>
-</body>
+    <div id="overlay" class="overlay hidden"></div>
+  </body>
 </html>
