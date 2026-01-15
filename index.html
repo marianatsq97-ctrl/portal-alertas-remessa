@@ -1,103 +1,256 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Portal de Alertas – Remessas</title>
+  <link rel="stylesheet" href="./style.css" />
 
-  <link rel="stylesheet" href="style.css">
+  <!-- XLSX (SheetJS) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- SheetJS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
+
 <body>
+  <div class="bgGlow"></div>
 
-<header>
-  <h1>Portal de Alertas – Remessas</h1>
-  <p>Controle de clientes sem remessa</p>
+  <header class="topHeader">
+    <div class="wrap">
+      <h1>Portal de Alertas – Remessas</h1>
+      <p class="subtitle">Controle de clientes sem remessa</p>
 
-  <div class="tabs">
-    <button id="tabResumo" class="active">Visualização</button>
-    <button id="tabDados">Dados</button>
-  </div>
-</header>
+      <div class="homeCard" id="homeCard">
+        <p class="hint">Escolha uma área e clique para abrir o painel ou sistema.</p>
+        <div class="homeActions">
+          <button class="pillBtn primary" id="btnGoViz">Visualização</button>
+          <button class="pillBtn primary" id="btnGoData">Dados</button>
+          <button class="pillBtn ghost" id="btnGoAll">Carregar todos</button>
+        </div>
+      </div>
+    </div>
+  </header>
 
-<main>
+  <main class="wrap mainWrap">
+    <!-- VISUALIZAÇÃO -->
+    <section id="sectionViz" class="panel hidden">
+      <div class="panelHeader">
+        <button class="backLink" id="btnBackFromViz">← Voltar</button>
+        <h2>Resumo Geral</h2>
+      </div>
 
-<!-- ================= RESUMO ================= -->
-<section id="resumo">
+      <div class="kpiGrid">
+        <button class="kpiCard ok" id="kpiOK" title="Abrir histórico OK">
+          <div class="kpiTitle">OK</div>
+          <div class="kpiValue" id="kpiOKValue">0</div>
+          <div class="kpiHint">0–4 dias sem remessa</div>
+        </button>
 
-  <div class="cards">
-    <div class="card ok">
-      <h3>OK</h3>
-      <span id="countOk">0</span>
-      <small>0–4 dias</small>
-      <button onclick="filtrarStatus('OK')">Ver</button>
+        <button class="kpiCard warn" id="kpiWARN" title="Abrir histórico Atenção">
+          <div class="kpiTitle">Atenção</div>
+          <div class="kpiValue" id="kpiWARNValue">0</div>
+          <div class="kpiHint">5–7 dias sem remessa</div>
+        </button>
+
+        <button class="kpiCard danger" id="kpiDANGER" title="Abrir histórico Plano de ação">
+          <div class="kpiTitle">Plano de ação</div>
+          <div class="kpiValue" id="kpiDANGERValue">0</div>
+          <div class="kpiHint">&gt; 7 dias sem remessa</div>
+        </button>
+      </div>
+
+      <div class="card chartCard">
+        <div class="cardTop">
+          <div>
+            <h3>Evolução de remessas</h3>
+            <p class="muted">
+              Barras por <b>mês/ano</b>, cores por <b>status</b> (OK / Atenção / Plano de ação).
+            </p>
+          </div>
+
+          <div class="chartFilters">
+            <label class="field">
+              <span>Ano</span>
+              <select id="filterYear"></select>
+            </label>
+
+            <label class="field">
+              <span>Mês</span>
+              <select id="filterMonth"></select>
+            </label>
+
+            <button class="pillBtn ghost" id="btnRefreshChart">Atualizar gráfico</button>
+          </div>
+        </div>
+
+        <div class="chartBox">
+          <canvas id="chartEvolution" height="120"></canvas>
+        </div>
+
+        <div class="footNote" id="sourceInfo">
+          Fonte: <span id="sourceName">—</span> • consolidado: <span id="sourceCount">0</span> • exibindo: <span id="shownCount">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- DADOS -->
+    <section id="sectionData" class="panel hidden">
+      <div class="panelHeader">
+        <button class="backLink" id="btnBackFromData">← Voltar</button>
+        <h2>Importação e Detalhamento</h2>
+      </div>
+
+      <div class="importBar">
+        <div class="importLeft">
+          <label class="fileBtn">
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+            <span>Escolher arquivo</span>
+          </label>
+
+          <div class="importMeta">
+            <div class="fileName" id="importFileName">Nenhum arquivo</div>
+            <div class="fileSub" id="importInfo">—</div>
+          </div>
+        </div>
+
+        <div class="importRight">
+          <button class="pillBtn ghost" id="btnLoadDemo">Carregar demo</button>
+          <button class="pillBtn danger" id="btnClearData">Excluir arquivo</button>
+        </div>
+      </div>
+
+      <div class="filtersRow">
+        <span class="chip">Filtros rápidos</span>
+
+        <label class="field inline">
+          <span>Status</span>
+          <select id="statusQuick">
+            <option value="">Todos</option>
+            <option value="OK">OK</option>
+            <option value="ATENCAO">Atenção</option>
+            <option value="PLANO">Plano de ação</option>
+          </select>
+        </label>
+
+        <label class="field inline">
+          <span>Data mínima (última remessa)</span>
+          <input type="date" id="minDateQuick" />
+        </label>
+
+        <button class="pillBtn ghost" id="btnClearFilters">Limpar filtros</button>
+
+        <div class="rightInfo">
+          Registros exibidos: <b id="recordsShown">0</b>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table class="dataTable">
+          <thead>
+            <tr>
+              <th>
+                Cliente
+                <button class="filterBtn" data-col="cliente" title="Filtrar Cliente">▼</button>
+              </th>
+              <th>
+                Contrato
+                <button class="filterBtn" data-col="contrato" title="Filtrar Contrato">▼</button>
+              </th>
+              <th>
+                Vendedor
+                <button class="filterBtn" data-col="vendedor" title="Filtrar Vendedor">▼</button>
+              </th>
+              <th>
+                Traço
+                <button class="filterBtn" data-col="traco" title="Filtrar Traço">▼</button>
+              </th>
+              <th>
+                Material
+                <button class="filterBtn" data-col="material" title="Filtrar Material">▼</button>
+              </th>
+              <th>
+                Última remessa
+                <button class="filterBtn" data-col="ultimaRemessa" title="Filtrar Última remessa">▼</button>
+              </th>
+              <th>
+                Quantidade
+                <button class="filterBtn" data-col="quantidade" title="Filtrar Quantidade">▼</button>
+              </th>
+              <th>
+                Dias sem remessa
+                <button class="filterBtn" data-col="diasSem" title="Filtrar Dias sem remessa">▼</button>
+              </th>
+              <th>
+                Status
+                <button class="filterBtn" data-col="status" title="Filtrar Status">▼</button>
+              </th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- POPUP FILTRO -->
+  <div id="filterPopup" class="filterPopup hidden" role="dialog" aria-modal="true">
+    <div class="filterPopupTop">
+      <div class="filterPopupTitle" id="filterPopupTitle">Filtro</div>
+      <button class="xBtn" id="filterPopupClose" title="Fechar">✕</button>
     </div>
 
-    <div class="card atencao">
-      <h3>Atenção</h3>
-      <span id="countAtencao">0</span>
-      <small>5–7 dias</small>
-      <button onclick="filtrarStatus('Atenção')">Ver</button>
+    <div class="filterPopupBody">
+      <input type="text" id="filterSearch" placeholder="Buscar..." />
+      <div class="filterList" id="filterList"></div>
     </div>
 
-    <div class="card plano">
-      <h3>Plano de ação</h3>
-      <span id="countPlano">0</span>
-      <small>> 7 dias</small>
-      <button onclick="filtrarStatus('Plano de ação')">Ver</button>
+    <div class="filterPopupActions">
+      <button class="pillBtn ghost" id="filterSelectAll">Marcar todos</button>
+      <button class="pillBtn ghost" id="filterClear">Limpar</button>
+      <button class="pillBtn primary" id="filterApply">Aplicar</button>
     </div>
   </div>
 
-  <div class="grafico-box">
-    <div class="grafico-filtros">
-      <select id="filtroAno"></select>
-      <select id="filtroMes">
-        <option value="Todos">Todos</option>
-      </select>
-      <button onclick="atualizarGrafico()">Atualizar gráfico</button>
+  <!-- MODAL HISTÓRICO -->
+  <div id="modalOverlay" class="modalOverlay hidden"></div>
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalTop">
+      <div>
+        <div class="modalTitle" id="modalTitle">Histórico</div>
+        <div class="modalSub" id="modalSub">—</div>
+      </div>
+      <button class="xBtn" id="modalClose" title="Fechar">✕</button>
     </div>
 
-    <canvas id="grafico"></canvas>
+    <div class="modalBody">
+      <input id="modalSearch" type="text" placeholder="Buscar..." />
+      <div class="modalTableWrap">
+        <table class="miniTable">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Contrato</th>
+              <th>Vendedor</th>
+              <th>Traço</th>
+              <th>Material</th>
+              <th>Última remessa</th>
+              <th>Quantidade</th>
+              <th>Dias</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="modalBodyRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modalActions">
+      <button class="pillBtn ghost" id="btnExportModalCSV">Exportar CSV</button>
+      <button class="pillBtn primary" id="btnGoToDataFromModal">Abrir na aba Dados</button>
+    </div>
   </div>
 
-</section>
-
-<!-- ================= DADOS ================= -->
-<section id="dados" class="hidden">
-
-  <div class="importacao">
-    <input type="file" id="fileInput" accept=".xlsx">
-    <button onclick="excluirArquivo()">Excluir arquivo</button>
-    <button onclick="limparFiltros()">Limpar filtros</button>
-  </div>
-
-  <div class="tabela-box">
-    <table>
-      <thead>
-        <tr>
-          <th>Cliente</th>
-          <th>Contrato</th>
-          <th>Vendedor</th>
-          <th>Traço</th>
-          <th>Material</th>
-          <th>Última remessa</th>
-          <th>Quantidade</th>
-          <th>Dias sem remessa</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="tabelaBody"></tbody>
-    </table>
-  </div>
-
-</section>
-
-</main>
-
-<script src="app.js"></script>
+  <script src="./app.js" defer></script>
 </body>
 </html>
