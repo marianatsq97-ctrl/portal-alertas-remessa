@@ -1,31 +1,23 @@
-fetch("./alerts.json")
-  .then(res => res.json())
-  .then(data => {
-    const container = document.getElementById("cards");
+const dadosFake = [
+  { cliente: "Cliente A", dias: 2 },
+  { cliente: "Cliente B", dias: 6 },
+  { cliente: "Cliente C", dias: 12 }
+];
 
-    data.forEach(item => {
-      const card = document.createElement("div");
-      card.className = "card";
+const container = document.getElementById("cards");
 
-      let statusClass = "ok";
-      let statusText = "OK";
+dadosFake.forEach(item => {
+  const card = document.createElement("div");
 
-      if (item.dias >= 5 && item.dias <= 7) {
-        statusClass = "atencao";
-        statusText = "Atenção";
-      }
+  let status = "status-ok";
+  if (item.dias >= 5 && item.dias <= 7) status = "status-warning";
+  if (item.dias > 7) status = "status-danger";
 
-      if (item.dias > 7) {
-        statusClass = "critico";
-        statusText = "Plano de Ação";
-      }
+  card.className = `card ${status}`;
+  card.innerHTML = `
+    <h3>${item.cliente}</h3>
+    <p>Dias sem remessa: <strong>${item.dias}</strong></p>
+  `;
 
-      card.innerHTML = `
-        <h3>${item.cliente}</h3>
-        <p>Dias sem remessa: <strong>${item.dias}</strong></p>
-        <p class="status ${statusClass}">${statusText}</p>
-      `;
-
-      container.appendChild(card);
-    });
-  });
+  container.appendChild(card);
+});
