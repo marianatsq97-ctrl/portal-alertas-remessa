@@ -2,7 +2,9 @@
 
 Sistema visual para acompanhamento de clientes sem remessa.
 
-Regras:
+### Regras
 - 0–4 dias → OK
 - 5–7 dias → Atenção
 - > 7 dias → Plano de ação
+
+Hospedado via GitHub Pages.
