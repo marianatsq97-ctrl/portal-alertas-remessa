@@ -1,19 +1,50 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Portal de Alertas – Remessas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="./style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-  <div class="glass">
-    <h1>Portal de Alertas – Remessas</h1>
-    <p class="subtitle">Monitoramento automático de clientes sem remessa</p>
 
-    <div id="cards" class="cards"></div>
+<div class="glass">
+  <h1>Portal de Alertas – Remessas</h1>
+  <p class="subtitle">Controle de clientes sem remessa</p>
+
+  <!-- UPLOAD -->
+  <input type="file" id="fileInput" accept=".xlsx">
+
+  <!-- FILTROS -->
+  <div class="filters">
+    <select id="statusFilter">
+      <option value="">Todos</option>
+      <option value="OK">OK</option>
+      <option value="ATENCAO">Atenção</option>
+      <option value="PLANO">Plano de ação</option>
+    </select>
+
+    <input type="date" id="dateFilter">
   </div>
 
-  <script src="./app.js"></script>
+  <!-- TABELA -->
+  <table>
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Material</th>
+        <th>Última Remessa</th>
+        <th>Quantidade</th>
+        <th>Dias sem remessa</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="./app.js"></script>
 </body>
 </html>
+
