@@ -1,61 +1,57 @@
-body {
-  background: #0e0e0e;
-  color: #fff;
-  font-family: Arial, sans-serif;
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
 }
 
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #141414, #000);
+  color: #fff;
+}
+
+.panel {
+  display: none;
+  padding: 40px;
+  min-height: 100vh;
+}
+
+.panel.active {
+  display: block;
+}
+
+h1, h2 {
+  color: #ff8c00;
 }
 
 .subtitle {
   opacity: 0.8;
 }
 
-.tabs {
-  display: flex;
-  gap: 10px;
+.info-box {
   margin: 20px 0;
+  padding: 15px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
 }
 
-.tab {
-  background: #222;
-  color: #fff;
+.menu button {
+  width: 200px;
+  margin: 10px;
+  padding: 15px;
   border: none;
-  padding: 10px 20px;
+  border-radius: 25px;
+  background: linear-gradient(145deg, #ff8c00, #ff6a00);
+  color: #000;
+  font-weight: bold;
   cursor: pointer;
 }
 
-.tab.active {
-  background: orange;
-  color: #000;
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-th {
-  background: orange;
-  color: #000;
-  padding: 10px;
-}
-
-td {
-  padding: 10px;
-  border-bottom: 1px solid #333;
+.back {
+  margin-bottom: 20px;
+  background: none;
+  color: #ff8c00;
+  border: none;
+  cursor: pointer;
 }
 
 .cards {
@@ -65,10 +61,31 @@ td {
 }
 
 .card {
+  flex: 1;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: 15px;
+  background: rgba(255,255,255,0.05);
+  text-align: center;
 }
 
-.ok { background: #1e7f43; }
-.atencao { background: #b58900; }
-.critico { background: #a83232; }
+.ok { border-left: 6px solid #00ff99; }
+.warn { border-left: 6px solid #ffcc00; }
+.danger { border-left: 6px solid #ff4444; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th {
+  background: #ff8c00;
+  color: #000;
+  padding: 10px;
+  cursor: pointer;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
