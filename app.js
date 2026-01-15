@@ -1,21 +1,68 @@
-fetch("./data/alerts.json")
-  .then(res => res.json())
-  .then(data => {
-    const container = document.getElementById("cards");
+const fileInput = document.getElementById("fileInput");
+const tableBody = document.getElementById("tableBody");
+const statusFilter = document.getElementById("statusFilter");
+const dateFilter = document.getElementById("dateFilter");
 
-    data.forEach(item => {
-      const card = document.createElement("div");
+let dados = [];
 
-      let status = "ok";
-      if (item.dias >= 5 && item.dias <= 7) status = "warn";
-      if (item.dias > 7) status = "danger";
+fileInput.addEventListener("change", e => {
+  const reader = new FileReader();
+  reader.onload = evt => {
+    const workbook = XLSX.read(evt.target.result, { type: "binary" });
+    const sheet = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-      card.className = `card ${status}`;
-      card.innerHTML = `
-        <h3>${item.cliente}</h3>
-        <p>Dias sem remessa: <strong>${item.dias}</strong></p>
-      `;
+    dados = sheet.map(row => {
+      const ultima = new Date(row["Data"]);
+      const hoje = new Date();
+      const dias = Math.floor((hoje - ultima) / (1000*60*60*24));
 
-      container.appendChild(card);
+      let status = "OK";
+      if (dias >= 5) status = "ATENCAO";
+      if (dias >= 7) status = "PLANO";
+
+      return {
+        cliente: row["Cliente"],
+        material: row["Material"],
+        data: ultima,
+        quantidade: row["Quantidade"],
+        dias,
+        status
+      };
     });
-  });
+
+    renderTabela();
+    enviarEmail(dados.filter(d => d.status === "PLANO"));
+  };
+
+  reader.readAsBinaryString(e.target.files[0]);
+});
+
+function renderTabela() {
+  tableBody.innerHTML = "";
+
+  dados
+    .filter(d => !statusFilter.value || d.status === statusFilter.value)
+    .filter(d => !dateFilter.value || d.data.toISOString().slice(0,10) === dateFilter.value)
+    .forEach(d => {
+      tableBody.innerHTML += `
+        <tr>
+          <td>${d.cliente}</td>
+          <td>${d.material}</td>
+          <td>${d.data.toLocaleDateString()}</td>
+          <td>${d.quantidade}</td>
+          <td>${d.dias}</td>
+          <td class="status-${d.status}">${d.status}</td>
+        </tr>
+      `;
+    });
+}
+
+statusFilter.onchange = renderTabela;
+dateFilter.onchange = renderTabela;
+
+function enviarEmail(lista) {
+  if (lista.length === 0) return;
+
+  console.log("Enviar e-mail para:", lista);
+  // Aqui entra EmailJS / webhook
+}
