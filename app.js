@@ -1,24 +1,21 @@
-fetch('./data/alerts.json')
+fetch("./data/alerts.json")
   .then(res => res.json())
   .then(data => {
-    const container = document.getElementById('cards');
+    const container = document.getElementById("cards");
 
     data.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'card';
+      const card = document.createElement("div");
 
-      let status = 'ok';
-      if (item.dias >= 5 && item.dias <= 7) status = 'warn';
-      if (item.dias > 7) status = 'danger';
+      let status = "ok";
+      if (item.dias >= 5 && item.dias <= 7) status = "warn";
+      if (item.dias > 7) status = "danger";
 
-      card.classList.add(status);
-
+      card.className = `card ${status}`;
       card.innerHTML = `
         <h3>${item.cliente}</h3>
-        <p>${item.dias} dias sem remessa</p>
+        <p>Dias sem remessa: <strong>${item.dias}</strong></p>
       `;
 
       container.appendChild(card);
     });
-  })
-  .catch(err => console.error('Erro ao carregar alerts.json', err));
+  });
