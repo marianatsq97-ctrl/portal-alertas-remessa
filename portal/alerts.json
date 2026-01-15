@@ -1,3 +1,6 @@
-{
-  "registros": []
-}
+[
+  { "cliente": "Cliente A", "dias": 2 },
+  { "cliente": "Cliente B", "dias": 6 },
+  { "cliente": "Cliente C", "dias": 11 },
+  { "cliente": "Cliente D", "dias": 0 }
+]
