@@ -1,19 +1,28 @@
-fetch("./data/alerts.json")
-  .then(r => r.json())
-  .then(lista => {
-    const cards = document.getElementById("cards");
+fetch("data/alerts.json")
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("cards");
 
-    lista.forEach(item => {
-      let status = "status-ok";
-      if (item.dias >= 5 && item.dias <= 7) status = "status-warning";
-      if (item.dias > 7) status = "status-danger";
+    data.forEach(item => {
+      let status = "ok";
+      let label = "OK";
 
-      const div = document.createElement("div");
-      div.className = `card ${status}`;
-      div.innerHTML = `
+      if (item.dias >= 5 && item.dias <= 7) {
+        status = "attention";
+        label = "Atenção";
+      } else if (item.dias > 7) {
+        status = "action";
+        label = "Plano de ação";
+      }
+
+      const card = document.createElement("div");
+      card.className = `card ${status}`;
+      card.innerHTML = `
         <h3>${item.cliente}</h3>
-        <p>Dias sem remessa: <strong>${item.dias}</strong></p>
+        <p>${item.dias} dias sem remessa</p>
+        <strong>${label}</strong>
       `;
-      cards.appendChild(div);
+
+      container.appendChild(card);
     });
   });
