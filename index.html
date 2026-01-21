@@ -4,235 +4,170 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Portal de Alertas – Remessas</title>
-  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="style.css" />
 
-  <!-- XLSX (SheetJS) -->
+  <!-- XLSX + Chart.js via CDN (não depende de pasta libs) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
-
 <body>
-  <div class="bgGlow"></div>
-
-  <header class="topHeader">
-    <div class="wrap">
-      <h1>Portal de Alertas – Remessas</h1>
-      <p class="subtitle">Controle de clientes sem remessa</p>
-
-      <div class="homeCard" id="homeCard">
-        <p class="hint">Escolha uma área e clique para abrir o painel ou sistema.</p>
-        <div class="homeActions">
-          <button class="pillBtn primary" id="btnGoViz">Visualização</button>
-          <button class="pillBtn primary" id="btnGoData">Dados</button>
-          <button class="pillBtn ghost" id="btnGoAll">Carregar todos</button>
-        </div>
+  <header class="topbar">
+    <div class="brand">
+      <img class="logo" src="assets/logo-areia-ana.png" alt="Areia Ana" />
+      <div class="brandText">
+        <h1>Portal de Alertas – Remessas</h1>
+        <p>Controle de contratos sem remessa</p>
       </div>
+    </div>
+
+    <div class="topActions">
+      <button class="btn ghost" id="btnCarregarTodos" title="Limpa filtros e mostra tudo">Carregar todos</button>
+      <button class="btn" id="btnDemo">Carregar Demo</button>
     </div>
   </header>
 
-  <main class="wrap mainWrap">
-    <!-- VISUALIZAÇÃO -->
-    <section id="sectionViz" class="panel hidden">
-      <div class="panelHeader">
-        <button class="backLink" id="btnBackFromViz">← Voltar</button>
-        <h2>Resumo Geral</h2>
+  <!-- Barra de filtros (no topo, do jeito certo) -->
+  <section class="panel filtersPanel">
+    <div class="filtersGrid">
+      <div class="field">
+        <label>Buscar</label>
+        <input id="fBusca" type="text" placeholder="Cliente, CNPJ, contrato, vendedor, traço, material..." />
       </div>
 
-      <div class="kpiGrid">
-        <button class="kpiCard ok" id="kpiOK" title="Abrir histórico OK">
-          <div class="kpiTitle">OK</div>
-          <div class="kpiValue" id="kpiOKValue">0</div>
-          <div class="kpiHint">0–4 dias sem remessa</div>
-        </button>
-
-        <button class="kpiCard warn" id="kpiWARN" title="Abrir histórico Atenção">
-          <div class="kpiTitle">Atenção</div>
-          <div class="kpiValue" id="kpiWARNValue">0</div>
-          <div class="kpiHint">5–7 dias sem remessa</div>
-        </button>
-
-        <button class="kpiCard danger" id="kpiDANGER" title="Abrir histórico Plano de ação">
-          <div class="kpiTitle">Plano de ação</div>
-          <div class="kpiValue" id="kpiDANGERValue">0</div>
-          <div class="kpiHint">&gt; 7 dias sem remessa</div>
-        </button>
+      <div class="field">
+        <label>Status</label>
+        <select id="fStatus">
+          <option value="__ALL__">Todos</option>
+          <option value="OK">OK (0–7)</option>
+          <option value="Atenção">Atenção (7–14)</option>
+          <option value="Atenção Grave">Atenção Grave (14–21)</option>
+          <option value="Plano de Ação">Plano de Ação (&gt;21)</option>
+        </select>
       </div>
 
-      <div class="card chartCard">
-        <div class="cardTop">
-          <div>
-            <h3>Evolução de remessas</h3>
-            <p class="muted">
-              Barras por <b>mês/ano</b>, cores por <b>status</b> (OK / Atenção / Plano de ação).
-            </p>
-          </div>
-
-          <div class="chartFilters">
-            <label class="field">
-              <span>Ano</span>
-              <select id="filterYear"></select>
-            </label>
-
-            <label class="field">
-              <span>Mês</span>
-              <select id="filterMonth"></select>
-            </label>
-
-            <button class="pillBtn ghost" id="btnRefreshChart">Atualizar gráfico</button>
-          </div>
-        </div>
-
-        <div class="chartBox">
-          <canvas id="chartEvolution" height="120"></canvas>
-        </div>
-
-        <div class="footNote" id="sourceInfo">
-          Fonte: <span id="sourceName">—</span> • consolidado: <span id="sourceCount">0</span> • exibindo: <span id="shownCount">0</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- DADOS -->
-    <section id="sectionData" class="panel hidden">
-      <div class="panelHeader">
-        <button class="backLink" id="btnBackFromData">← Voltar</button>
-        <h2>Importação e Detalhamento</h2>
+      <div class="field">
+        <label>Ano</label>
+        <select id="fAno"></select>
       </div>
 
-      <div class="importBar">
-        <div class="importLeft">
-          <label class="fileBtn">
-            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
-            <span>Escolher arquivo</span>
-          </label>
-
-          <div class="importMeta">
-            <div class="fileName" id="importFileName">Nenhum arquivo</div>
-            <div class="fileSub" id="importInfo">—</div>
-          </div>
-        </div>
-
-        <div class="importRight">
-          <button class="pillBtn ghost" id="btnLoadDemo">Carregar demo</button>
-          <button class="pillBtn danger" id="btnClearData">Excluir arquivo</button>
-        </div>
+      <div class="field">
+        <label>Mês</label>
+        <select id="fMes"></select>
       </div>
 
-      <div class="filtersRow">
-        <span class="chip">Filtros rápidos</span>
-
-        <label class="field inline">
-          <span>Status</span>
-          <select id="statusQuick">
-            <option value="">Todos</option>
-            <option value="OK">OK</option>
-            <option value="ATENCAO">Atenção</option>
-            <option value="PLANO">Plano de ação</option>
-          </select>
-        </label>
-
-        <label class="field inline">
-          <span>Data mínima (última remessa)</span>
-          <input type="date" id="minDateQuick" />
-        </label>
-
-        <button class="pillBtn ghost" id="btnClearFilters">Limpar filtros</button>
-
-        <div class="rightInfo">
-          Registros exibidos: <b id="recordsShown">0</b>
-        </div>
+      <div class="field">
+        <label>Somente agregados</label>
+        <select id="fAgregado">
+          <option value="1">Sim</option>
+          <option value="0">Não</option>
+        </select>
       </div>
-
-      <div class="tableWrap">
-        <table class="dataTable">
-          <thead>
-            <tr>
-              <th>
-                Cliente
-                <button class="filterBtn" data-col="cliente" title="Filtrar Cliente">▼</button>
-              </th>
-              <th>
-                Contrato
-                <button class="filterBtn" data-col="contrato" title="Filtrar Contrato">▼</button>
-              </th>
-              <th>
-                Vendedor
-                <button class="filterBtn" data-col="vendedor" title="Filtrar Vendedor">▼</button>
-              </th>
-              <th>
-                Traço
-                <button class="filterBtn" data-col="traco" title="Filtrar Traço">▼</button>
-              </th>
-              <th>
-                Material
-                <button class="filterBtn" data-col="material" title="Filtrar Material">▼</button>
-              </th>
-              <th>
-                Última remessa
-                <button class="filterBtn" data-col="ultimaRemessa" title="Filtrar Última remessa">▼</button>
-              </th>
-              <th>
-                Quantidade
-                <button class="filterBtn" data-col="quantidade" title="Filtrar Quantidade">▼</button>
-              </th>
-              <th>
-                Dias sem remessa
-                <button class="filterBtn" data-col="diasSem" title="Filtrar Dias sem remessa">▼</button>
-              </th>
-              <th>
-                Status
-                <button class="filterBtn" data-col="status" title="Filtrar Status">▼</button>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <!-- POPUP FILTRO -->
-  <div id="filterPopup" class="filterPopup hidden" role="dialog" aria-modal="true">
-    <div class="filterPopupTop">
-      <div class="filterPopupTitle" id="filterPopupTitle">Filtro</div>
-      <button class="xBtn" id="filterPopupClose" title="Fechar">✕</button>
     </div>
 
-    <div class="filterPopupBody">
-      <input type="text" id="filterSearch" placeholder="Buscar..." />
-      <div class="filterList" id="filterList"></div>
+    <div class="filtersFooter">
+      <div class="hint" id="hintFonte">Fonte: nenhuma</div>
+      <div class="hint" id="hintRegistros">Registros exibidos: 0</div>
+    </div>
+  </section>
+
+  <!-- RESUMO GERAL (SEM DUPLICAÇÃO) -->
+  <section class="panel">
+    <div class="panelTitle">
+      <h2>Resumo Geral</h2>
+      <span class="subtitle">Contagem por <b>CONTRATOS</b>, atualiza com filtros em tempo real</span>
     </div>
 
-    <div class="filterPopupActions">
-      <button class="pillBtn ghost" id="filterSelectAll">Marcar todos</button>
-      <button class="pillBtn ghost" id="filterClear">Limpar</button>
-      <button class="pillBtn primary" id="filterApply">Aplicar</button>
+    <div class="cards" id="cardsResumo"></div>
+  </section>
+
+  <!-- EVOLUÇÃO -->
+  <section class="panel">
+    <div class="panelTitle">
+      <h2>Evolução de remessas</h2>
+      <span class="subtitle">Barras por <b>mês/ano</b>, empilhado por status (cores oficiais)</span>
     </div>
-  </div>
+
+    <div class="chartWrap">
+      <canvas id="chartEvolucao" height="120"></canvas>
+    </div>
+  </section>
+
+  <!-- IMPORTAÇÃO / PERMISSÃO -->
+  <section class="panel" id="panelImport">
+    <div class="panelTitle">
+      <h2>Importação</h2>
+      <span class="subtitle">Aparece só para perfil com permissão</span>
+    </div>
+
+    <div class="importGrid">
+      <div class="field">
+        <label>Senha (admin)</label>
+        <input id="adminPass" type="password" placeholder="Digite a senha para habilitar importação" />
+      </div>
+
+      <div class="importActions">
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
+        <button class="btn" id="btnImportar">Importar arquivo</button>
+        <button class="btn danger" id="btnExcluirArquivo">Excluir arquivo</button>
+      </div>
+    </div>
+
+    <div class="importInfo">
+      <small>
+        * Segurança real é com backend. Aqui é “controle visual” (front-end) para não aparecer para quem é consulta.
+      </small>
+    </div>
+  </section>
+
+  <!-- DETALHAMENTO -->
+  <section class="panel">
+    <div class="panelTitle">
+      <h2>Detalhamento</h2>
+      <span class="subtitle">Última remessa por contrato + campos adicionais (obra/volume/dias)</span>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>CNPJ</th>
+            <th>Contrato</th>
+            <th>Vendedor</th>
+            <th>Traço</th>
+            <th>Material</th>
+            <th>Última remessa</th>
+            <th>Quantidade</th>
+            <th>Dias sem remessa</th>
+            <th>Tempo</th>
+            <th>Nome da obra</th>
+            <th>Volume da obra</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
 
   <!-- MODAL HISTÓRICO -->
-  <div id="modalOverlay" class="modalOverlay hidden"></div>
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modalTop">
-      <div>
-        <div class="modalTitle" id="modalTitle">Histórico</div>
-        <div class="modalSub" id="modalSub">—</div>
+  <div class="modalBackdrop hidden" id="modalBackdrop">
+    <div class="modal">
+      <div class="modalHead">
+        <div>
+          <h3 id="modalTitle">Histórico</h3>
+          <p id="modalSubtitle">—</p>
+        </div>
+        <button class="btn ghost" id="btnFecharModal">Fechar</button>
       </div>
-      <button class="xBtn" id="modalClose" title="Fechar">✕</button>
-    </div>
 
-    <div class="modalBody">
-      <input id="modalSearch" type="text" placeholder="Buscar..." />
-      <div class="modalTableWrap">
-        <table class="miniTable">
+      <div class="tableWrap modalTable">
+        <table>
           <thead>
             <tr>
               <th>Cliente</th>
+              <th>CNPJ</th>
               <th>Contrato</th>
-              <th>Vendedor</th>
-              <th>Traço</th>
               <th>Material</th>
               <th>Última remessa</th>
               <th>Quantidade</th>
@@ -240,17 +175,12 @@
               <th>Status</th>
             </tr>
           </thead>
-          <tbody id="modalBodyRows"></tbody>
+          <tbody id="modalBody"></tbody>
         </table>
       </div>
     </div>
-
-    <div class="modalActions">
-      <button class="pillBtn ghost" id="btnExportModalCSV">Exportar CSV</button>
-      <button class="pillBtn primary" id="btnGoToDataFromModal">Abrir na aba Dados</button>
-    </div>
   </div>
 
-  <script src="./app.js" defer></script>
+  <script src="app.js"></script>
 </body>
 </html>
