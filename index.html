@@ -1,1540 +1,330 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Portal de Alertas - Remessas</title>
+<meta charset="UTF-8" />
+<title>Portal de Alertas – Remessas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- SheetJS (XLS/XLSX) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg-dark:#050814;
+  --bg-card:#0b1020;
+  --accent:#ff8c1a;
+  --ok:#22c55e;
+  --warn:#facc15;
+  --grave:#fb923c;
+  --action:#ef4444;
+  --text:#f5f7ff;
+  --muted:#9aa0ff;
+}
 
-  <style>
-    :root{
-      --bg:#050814;
-      --card:#0b1020;
-      --card2:#101629;
-      --text:#f5f7ff;
-      --muted:#c2c7ff;
-      --accent:#ff7a1a;
-      --accent2:#ff9b4a;
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto}
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top,#1a1d2a 0,#050814 60%);
+  color:var(--text);
+}
 
-      --ok:#22c55e;        /* verde */
-      --warn:#facc15;      /* amarelo */
-      --grave:#fb923c;     /* laranja */
-      --action:#ef4444;    /* vermelho */
+/* ===== LOGIN ===== */
+#login{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+}
 
-      --shadow: 0 18px 50px rgba(0,0,0,.55);
-      --radius: 18px;
-    }
+.login-card{
+  width:420px;
+  background:linear-gradient(180deg,#0b1020,#060914);
+  border-radius:20px;
+  padding:40px;
+  box-shadow:0 40px 80px rgba(0,0,0,.6);
+  text-align:center;
+}
 
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(1100px 600px at 50% 0%, rgba(255,122,26,.35), rgba(5,8,20,.4) 55%, rgba(5,8,20,1) 100%),
-        radial-gradient(900px 500px at 95% 100%, rgba(255,122,26,.15), rgba(5,8,20,1) 70%);
-      min-height:100vh;
-    }
+.login-logo{
+  width:140px;
+  height:140px;
+  margin:0 auto 20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-    /* Largura maior (resolve “tela pequena”) */
-    .container{
-      width:min(1380px, 96vw);
-      margin:0 auto;
-      padding: 22px 0 40px;
-    }
+.login-logo img{
+  width:100%;
+  filter:drop-shadow(0 0 25px rgba(255,255,255,.15));
+}
 
-    /* ====== LOGIN ====== */
-    .loginWrap{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
-    .loginCard{
-      width:min(560px, 92vw);
-      background: linear-gradient(180deg, rgba(16,22,41,.9), rgba(11,16,32,.92));
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      padding: 26px;
-    }
-    .loginTop{
-      display:flex;
-      gap:14px;
-      align-items:center;
-      justify-content:center;
-      margin-bottom:18px;
-      flex-direction:column;
-      text-align:center;
-    }
-    .logo{
-      width:52px;
-      height:52px;
-      object-fit:contain;
-      border-radius: 12px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.08);
-      padding:8px;
-    }
-    .loginTitle{
-      font-size:26px;
-      font-weight:800;
-      letter-spacing:.2px;
-      margin:0;
-    }
-    .loginSub{
-      margin:0;
-      color:var(--muted);
-      font-size:13px;
-    }
-    .field{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      margin: 12px 0;
-    }
-    .field label{
-      color:var(--muted);
-      font-size:13px;
-    }
-    .field input{
-      height:44px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.28);
-      color: var(--text);
-      padding: 0 12px;
-      outline:none;
-    }
-    .btn{
-      border:none;
-      cursor:pointer;
-      height:46px;
-      border-radius: 12px;
-      font-weight:800;
-      letter-spacing:.2px;
-    }
-    .btnPrimary{
-      background: linear-gradient(180deg, var(--accent2), var(--accent));
-      color:#120a03;
-      width:100%;
-      margin-top:10px;
-      box-shadow: 0 10px 30px rgba(255,122,26,.22);
-    }
-    .btnGhost{
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .hint{
-      margin-top:12px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
-      opacity:.9;
-    }
-    .error{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      background: rgba(239,68,68,.10);
-      border: 1px solid rgba(239,68,68,.25);
-      color:#ffd1d1;
-      display:none;
-      font-size:13px;
-    }
+.login-card h1{
+  margin:0;
+  font-size:28px;
+}
 
-    /* ====== APP ====== */
-    header{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 18px;
-      margin-bottom: 14px;
-    }
-    .brand{
-      display:flex;
-      gap:12px;
-      align-items:center;
-    }
-    .brand h1{
-      margin:0;
-      font-size: 30px;
-      font-weight: 900;
-    }
-    .brand small{
-      color:var(--muted);
-      display:block;
-      margin-top:4px;
-      font-size: 13px;
-    }
-    .topRight{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-    .pill{
-      padding:10px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.10);
-      color: var(--muted);
-      font-size: 13px;
-      white-space:nowrap;
-    }
+.login-card p{
+  color:var(--muted);
+  margin:8px 0 24px;
+}
 
-    .tabs{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      margin: 12px 0 18px;
-    }
-    .tab{
-      padding:10px 14px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.10);
-      color: var(--text);
-      cursor:pointer;
-      font-weight:800;
-      font-size: 13px;
-    }
-    .tab.active{
-      background: linear-gradient(180deg, rgba(255,122,26,.35), rgba(255,122,26,.12));
-      border-color: rgba(255,122,26,.45);
-    }
+.login-card input{
+  width:100%;
+  padding:14px;
+  margin-bottom:14px;
+  border-radius:12px;
+  border:none;
+  background:#050814;
+  color:white;
+  font-size:15px;
+}
 
-    .card{
-      background: linear-gradient(180deg, rgba(16,22,41,.88), rgba(11,16,32,.90));
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 16px;
-      margin: 12px 0;
-    }
-    .cardHead{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom: 10px;
-    }
-    .cardHead h2{
-      margin:0;
-      font-size: 20px;
-      font-weight: 900;
-      letter-spacing:.2px;
-    }
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:flex-end;
-    }
+.login-card button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  background:var(--accent);
+  color:#000;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
 
-    .grid4{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(220px, 1fr));
-      gap:12px;
-    }
-    @media (max-width: 1100px){
-      .grid4{grid-template-columns: repeat(2, minmax(220px, 1fr));}
-    }
-    @media (max-width: 640px){
-      .grid4{grid-template-columns: 1fr;}
-      header{flex-direction:column; align-items:flex-start;}
-      .topRight{width:100%; justify-content:space-between;}
-    }
+/* ===== APP ===== */
+#app{display:none;padding:30px}
 
-    .statusCard{
-      border-radius: 16px;
-      padding: 14px;
-      position:relative;
-      overflow:hidden;
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.08);
-      min-height:92px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-    .statusLine{
-      position:absolute;
-      left:0;
-      top:0;
-      bottom:0;
-      width:6px;
-      opacity:.95;
-    }
-    .statusTop{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:10px;
-    }
-    .statusName{
-      font-weight:900;
-      font-size: 14px;
-      letter-spacing:.2px;
-    }
-    .statusCount{
-      font-weight: 900;
-      font-size: 30px;
-      margin-top: 8px;
-    }
-    .miniBtn{
-      height:30px;
-      padding:0 10px;
-      border-radius: 10px;
-      font-weight:900;
-      font-size: 12px;
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.12);
-      color: var(--text);
-      cursor:pointer;
-      white-space:nowrap;
-    }
-    .legend{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 6px;
-    }
-    .legItem{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.08);
-      padding: 6px 10px;
-      border-radius: 999px;
-    }
-    .dot{
-      width:10px;height:10px;border-radius: 999px;
-    }
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:30px;
+}
 
-    .chartWrap{
-      height: 320px;
-    }
-    canvas{display:block}
+.header-left{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
 
-    .filtersRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:flex-end;
-    }
-    .select, .search{
-      height:38px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.25);
-      color: var(--text);
-      padding: 0 10px;
-      outline:none;
-      font-weight:700;
-      font-size: 13px;
-    }
-    .search{width: 220px;}
-    .muted{
-      color: var(--muted);
-      font-size: 13px;
-    }
+.header-left img{
+  width:60px;
+  filter:drop-shadow(0 0 15px rgba(255,255,255,.15));
+}
 
-    table{
-      width:100%;
-      border-collapse: collapse;
-      overflow:hidden;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.08);
-    }
-    thead th{
-      text-align:left;
-      padding:12px 10px;
-      background: linear-gradient(180deg, rgba(255,122,26,.95), rgba(255,122,26,.75));
-      color:#150a02;
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing:.2px;
-      white-space:nowrap;
-    }
-    tbody td{
-      padding:11px 10px;
-      border-top: 1px solid rgba(255,255,255,.08);
-      font-size: 13px;
-      color: var(--text);
-      vertical-align:top;
-    }
-    tbody tr:hover{
-      background: rgba(255,255,255,.04);
-    }
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 900;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.20);
-      white-space:nowrap;
-    }
-    .bOk{border-color: rgba(34,197,94,.45)}
-    .bWarn{border-color: rgba(250,204,21,.45)}
-    .bGrave{border-color: rgba(251,146,60,.45)}
-    .bAction{border-color: rgba(239,68,68,.45)}
+header h2{margin:0}
 
-    /* ====== MODAL ====== */
-    .modalBackdrop{
-      position:fixed;
-      inset:0;
-      background: rgba(0,0,0,.60);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding: 16px;
-      z-index: 999;
-    }
-    .modal{
-      width:min(980px, 96vw);
-      max-height: 86vh;
-      overflow:auto;
-      background: linear-gradient(180deg, rgba(16,22,41,.96), rgba(11,16,32,.96));
-      border:1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      padding: 14px;
-    }
-    .modalHead{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom: 10px;
-    }
-    .modalHead h3{
-      margin:0;
-      font-size: 18px;
-      font-weight: 900;
-    }
-    .closeBtn{
-      height:36px;
-      padding: 0 12px;
-      border-radius: 12px;
-      cursor:pointer;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      font-weight: 900;
-    }
+.badge{
+  padding:8px 14px;
+  border-radius:20px;
+  background:#101629;
+  border:1px solid #1f2a55;
+}
 
-    /* ====== ADMIN AREA ====== */
-    .adminBox{
-      display:none;
-    }
-    .adminGrid{
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:12px;
-    }
-    @media (max-width: 960px){
-      .adminGrid{grid-template-columns: 1fr;}
-    }
-    .drop{
-      border: 1px dashed rgba(255,255,255,.18);
-      border-radius: 16px;
-      background: rgba(0,0,0,.18);
-      padding: 14px;
-    }
-    .drop strong{display:block;margin-bottom:6px}
-    .fileRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top: 10px;
-    }
-    input[type="file"]{
-      color: var(--muted);
-      font-weight:700;
-      font-size: 13px;
-    }
-    .small{
-      font-size: 12px;
-      color: var(--muted);
-      line-height:1.35;
-    }
-  </style>
+button{
+  background:#101629;
+  color:white;
+  border:1px solid #1f2a55;
+  border-radius:14px;
+  padding:10px 16px;
+  cursor:pointer;
+}
+
+button.primary{
+  background:var(--accent);
+  color:#000;
+  border:none;
+  font-weight:700;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:linear-gradient(180deg,#0b1020,#050814);
+  border-radius:18px;
+  padding:20px;
+  position:relative;
+}
+
+.card.ok{border-left:5px solid var(--ok)}
+.card.warn{border-left:5px solid var(--warn)}
+.card.grave{border-left:5px solid var(--grave)}
+.card.action{border-left:5px solid var(--action)}
+
+.card h3{margin:0;font-size:16px}
+.card span{font-size:34px;font-weight:800}
+
+.section{
+  margin-top:30px;
+  background:linear-gradient(180deg,#0b1020,#050814);
+  border-radius:18px;
+  padding:20px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:14px;
+}
+
+th,td{
+  padding:12px;
+  border-bottom:1px solid #1f2a55;
+  text-align:left;
+}
+
+th{
+  background:var(--accent);
+  color:#000;
+}
+</style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
-<section id="loginScreen" class="loginWrap">
-  <div class="loginCard">
-    <div class="loginTop">
-      <img class="logo" src="./logo-areia-ana.png" alt="Logo Areia Ana" />
-      <h2 class="loginTitle">Portal de Alertas</h2>
-      <p class="loginSub">Remessas • Controle por Contratos • Status automático</p>
+<div id="login">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="logo-areia-ana.png" alt="Areia Ana">
     </div>
+    <h1>Portal de Alertas</h1>
+    <p>Remessas • Contratos • Status automático</p>
 
-    <div class="field">
-      <label>Usuário</label>
-      <input id="loginUser" placeholder="usuario ou admin" autocomplete="username" />
-    </div>
-
-    <div class="field">
-      <label>Senha</label>
-      <input id="loginPass" type="password" placeholder="••••" autocomplete="current-password" />
-    </div>
-
-    <button id="btnLogin" class="btn btnPrimary">Entrar</button>
-
-    <div id="loginErr" class="error"></div>
-
-    <div class="hint">
-      <b>Contas padrão (troque depois no código):</b><br>
-      • admin / 1234 (Administrador)<br>
-      • usuario / 1234 (Usuário - só visualização)
-    </div>
+    <input id="user" placeholder="Usuário">
+    <input id="pass" type="password" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
   </div>
-</section>
+</div>
 
 <!-- APP -->
-<section id="appScreen" style="display:none;">
-  <div class="container">
-
-    <header>
-      <div class="brand">
-        <img class="logo" src="./logo-areia-ana.png" alt="Logo Areia Ana" />
-        <div>
-          <h1>Portal de Alertas – Remessas</h1>
-          <small id="baseInfo">Base: (sem dados carregados)</small>
-        </div>
-      </div>
-
-      <div class="topRight">
-        <div class="pill" id="perfilPill">Perfil: -</div>
-        <button id="btnLogout" class="btn btnGhost" style="height:42px;padding:0 14px;border-radius:999px;font-weight:900;">
-          Sair
-        </button>
-      </div>
-    </header>
-
-    <div class="tabs">
-      <button class="tab active" data-tab="tabPainel">Visualização</button>
-      <button class="tab" data-tab="tabDetalhe">Detalhamento</button>
-      <button class="tab" id="tabAdminBtn" data-tab="tabAdmin" style="display:none;">Admin</button>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <img src="logo-areia-ana.png">
+      <h2>Portal de Alertas – Remessas</h2>
     </div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span id="perfil" class="badge"></span>
+      <button onclick="logout()">Sair</button>
+    </div>
+  </header>
 
-    <!-- ====== PAINEL ====== -->
-    <section id="tabPainel">
-
-      <div class="card">
-        <div class="cardHead">
-          <h2>Resumo Geral (Contratos)</h2>
-          <div class="actions">
-            <button id="btnCarregarTodos" class="btn btnGhost" style="height:40px;padding:0 12px;border-radius:12px;font-weight:900;">
-              Carregar Todos
-            </button>
-            <button id="btnDemo" class="btn btnGhost" style="height:40px;padding:0 12px;border-radius:12px;font-weight:900;">
-              Carregar Demo
-            </button>
-          </div>
-        </div>
-
-        <div class="grid4" id="statusGrid"></div>
-
-        <div class="legend">
-          <div class="legItem"><span class="dot" style="background:var(--ok)"></span> OK (0 a 7 dias)</div>
-          <div class="legItem"><span class="dot" style="background:var(--warn)"></span> Atenção (7 a 14 dias)</div>
-          <div class="legItem"><span class="dot" style="background:var(--grave)"></span> Atenção Grave (14 a 21 dias)</div>
-          <div class="legItem"><span class="dot" style="background:var(--action)"></span> Plano de Ação (&gt; 21 dias)</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="cardHead">
-          <h2>Evolução de Remessas (Mês/Ano)</h2>
-          <div class="filtersRow">
-            <select id="filtroMes" class="select"></select>
-            <select id="filtroStatus" class="select"></select>
-          </div>
-        </div>
-
-        <div class="chartWrap">
-          <canvas id="chartEvolucao"></canvas>
-        </div>
-
-        <div class="muted" style="margin-top:8px;">
-          Ordenação por data da última remessa (cronológica). Gráfico usa as cores dos status.
-        </div>
-      </div>
-
-    </section>
-
-    <!-- ====== DETALHE ====== -->
-    <section id="tabDetalhe" style="display:none;">
-
-      <div class="card">
-        <div class="cardHead">
-          <h2>Detalhamento</h2>
-          <div class="filtersRow">
-            <input id="searchTxt" class="search" placeholder="Buscar (cliente, contrato, vendedor...)" />
-            <select id="filtroMes2" class="select"></select>
-            <select id="filtroStatus2" class="select"></select>
-          </div>
-        </div>
-
-        <div style="overflow:auto;">
-          <table>
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>CNPJ</th>
-                <th>Contrato</th>
-                <th>Vendedor</th>
-                <th>Traço</th>
-                <th>Obra</th>
-                <th>Volume Obra</th>
-                <th>Última Remessa</th>
-                <th>Dias</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="tbodyDetalhe"></tbody>
-          </table>
-        </div>
-
-        <div class="muted" id="footCount" style="margin-top:10px;"></div>
-      </div>
-
-    </section>
-
-    <!-- ====== ADMIN ====== -->
-    <section id="tabAdmin" style="display:none;">
-      <div class="card adminBox" id="adminBox">
-        <div class="cardHead">
-          <h2>Admin • Importação e Gestão da Base</h2>
-          <div class="actions">
-            <button id="btnExportJson" class="btn btnGhost" style="height:40px;padding:0 12px;border-radius:12px;font-weight:900;">
-              Exportar JSON (backup)
-            </button>
-            <button id="btnClear" class="btn btnGhost" style="height:40px;padding:0 12px;border-radius:12px;font-weight:900;border-color:rgba(239,68,68,.25);">
-              Excluir Base
-            </button>
-          </div>
-        </div>
-
-        <div class="adminGrid">
-          <div class="drop">
-            <strong>Importar arquivo (CSV / XLS / XLSX)</strong>
-            <div class="small">
-              • Os dados ficam salvos no navegador (LocalStorage).<br>
-              • Pode atualizar a página sem perder.<br>
-              • Para trocar a base: clique em <b>Excluir Base</b> e importe outra.
-            </div>
-
-            <div class="fileRow">
-              <input id="fileInput" type="file" accept=".csv,.xls,.xlsx" />
-              <button id="btnImport" class="btn btnPrimary" style="height:40px;padding:0 12px;border-radius:12px;font-weight:900;width:auto;">
-                Importar
-              </button>
-            </div>
-
-            <div class="small" style="margin-top:10px;">
-              <b>Colunas esperadas (nomes flexíveis):</b><br>
-              Cliente, CNPJ, Contrato, Vendedor, Traço, Data da Remessa / Última Remessa, Nome da Obra, Volume da Obra.<br>
-              (Se vier “Data Remessa”, “Dt Remessa”, “Data”, eu tento reconhecer automático.)
-            </div>
-
-            <div id="importMsg" class="error" style="display:none;margin-top:12px;"></div>
-          </div>
-
-          <div class="drop">
-            <strong>Regras do sistema</strong>
-            <div class="small" style="margin-top:6px;">
-              • Status por dias sem remessa:<br>
-              <span style="color:var(--ok);font-weight:900;">OK</span> (0 a 7) •
-              <span style="color:var(--warn);font-weight:900;">Atenção</span> (7 a 14) •
-              <span style="color:var(--grave);font-weight:900;">Atenção Grave</span> (14 a 21) •
-              <span style="color:var(--action);font-weight:900;">Plano de Ação</span> (&gt;21)<br><br>
-              • Resumo sempre por <b>Contratos</b> (não clientes únicos).<br>
-              • Chave principal de vínculo: <b>CNPJ</b> (quando existir).<br>
-              • Filtros atualizam resumo + gráfico + tabela automaticamente.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
+  <div class="cards">
+    <div class="card ok"><h3>OK</h3><span id="ok">0</span></div>
+    <div class="card warn"><h3>Atenção</h3><span id="warn">0</span></div>
+    <div class="card grave"><h3>Atenção Grave</h3><span id="grave">0</span></div>
+    <div class="card action"><h3>Plano de Ação</h3><span id="action">0</span></div>
   </div>
-</section>
 
-<!-- MODAL -->
-<div id="modalBackdrop" class="modalBackdrop">
-  <div class="modal">
-    <div class="modalHead">
-      <h3 id="modalTitle">Histórico</h3>
-      <button id="modalClose" class="closeBtn">Fechar</button>
-    </div>
-    <div style="overflow:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>CNPJ</th>
-            <th>Contrato</th>
-            <th>Vendedor</th>
-            <th>Traço</th>
-            <th>Obra</th>
-            <th>Última Remessa</th>
-            <th>Dias</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="modalBody"></tbody>
-      </table>
-    </div>
+  <div id="adminArea" class="section" style="display:none">
+    <h3>Administração</h3>
+    <input type="file" id="file">
+    <button class="primary" onclick="importar()">Importar</button>
+    <button onclick="limpar()">Excluir Dados</button>
+  </div>
+
+  <div class="section">
+    <h3>Detalhamento</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Contrato</th>
+          <th>Vendedor</th>
+          <th>Traço</th>
+          <th>Última Remessa</th>
+          <th>Dias</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
 </div>
 
 <script>
-/* =========================
-   CONFIG / CONTAS
-========================= */
-const USERS = {
-  admin:  { pass: "1234", role: "Administrador" },
-  usuario:{ pass: "1234", role: "Usuário" }
+const USERS={
+  admin:{pass:"1234",role:"Administrador"},
+  usuario:{pass:"1234",role:"Usuário"}
 };
 
-const STORAGE_KEY = "AA_REMESSAS_BASE_v1";
-const STORAGE_META = "AA_REMESSAS_META_v1";
+let perfil=null;
+let dados=JSON.parse(localStorage.getItem("dados")||"[]");
 
-/* =========================
-   STATUS
-========================= */
-const STATUS = [
-  { key:"OK", label:"OK", color:getCSS("--ok"), from:0, to:7, badge:"bOk" },
-  { key:"ATENCAO", label:"Atenção", color:getCSS("--warn"), from:7, to:14, badge:"bWarn" },
-  { key:"GRAVE", label:"Atenção Grave", color:getCSS("--grave"), from:14, to:21, badge:"bGrave" },
-  { key:"PLANO", label:"Plano de Ação", color:getCSS("--action"), from:21, to:99999, badge:"bAction" },
-];
-
-function statusFromDays(days){
-  // Regra: OK = 0..7 (inclusive)
-  // Atenção = >7..14 (inclusive)
-  // Grave = >14..21 (inclusive)
-  // Plano = >21
-  if (days <= 7) return STATUS[0];
-  if (days <= 14) return STATUS[1];
-  if (days <= 21) return STATUS[2];
-  return STATUS[3];
+function login(){
+  const u=user.value;
+  const p=pass.value;
+  if(!USERS[u]||USERS[u].pass!==p) return alert("Login inválido");
+  perfil=USERS[u].role;
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("perfil").innerText="Perfil: "+perfil;
+  if(perfil==="Administrador") adminArea.style.display="block";
+  render();
 }
 
-function formatDateBR(d){
-  if(!d) return "";
-  const dd = String(d.getDate()).padStart(2,"0");
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const yy = d.getFullYear();
-  return `${dd}/${mm}/${yy}`;
-}
-function monthYear(d){
-  if(!d) return "";
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const yy = d.getFullYear();
-  return `${mm}/${yy}`;
-}
-function monthKey(d){
-  if(!d) return "";
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const yy = d.getFullYear();
-  return `${yy}-${mm}`;
-}
-function parseDateAny(val){
-  if(val == null || val === "") return null;
-
-  // Excel serial number
-  if (typeof val === "number" && val > 25000 && val < 80000) {
-    const utc_days = Math.floor(val - 25569);
-    const utc_value = utc_days * 86400;
-    const date_info = new Date(utc_value * 1000);
-    return new Date(date_info.getFullYear(), date_info.getMonth(), date_info.getDate());
-  }
-
-  // Already Date
-  if (val instanceof Date && !isNaN(val)) return new Date(val.getFullYear(), val.getMonth(), val.getDate());
-
-  const s = String(val).trim();
-  if(!s) return null;
-
-  // BR dd/mm/yyyy
-  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
-  if(br){
-    const dd = parseInt(br[1],10);
-    const mm = parseInt(br[2],10)-1;
-    const yy = parseInt(br[3].length===2 ? "20"+br[3] : br[3], 10);
-    const d = new Date(yy, mm, dd);
-    if(!isNaN(d)) return d;
-  }
-
-  // ISO yyyy-mm-dd
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if(iso){
-    const d = new Date(parseInt(iso[1],10), parseInt(iso[2],10)-1, parseInt(iso[3],10));
-    if(!isNaN(d)) return d;
-  }
-
-  // Fallback Date parse
-  const d2 = new Date(s);
-  if(!isNaN(d2)) return new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
-  return null;
+function logout(){
+  location.reload();
 }
 
-function getCSS(varName){
-  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-}
-
-/* =========================
-   STATE
-========================= */
-let session = null; // {user, role}
-let rawRows = [];   // remessa rows
-let contracts = []; // aggregated by contract
-let chart = null;
-
-const filters = {
-  mes: "ALL",
-  status: "ALL",
-  q: ""
-};
-
-/* =========================
-   ELEMENTS
-========================= */
-const loginScreen = document.getElementById("loginScreen");
-const appScreen = document.getElementById("appScreen");
-const loginErr = document.getElementById("loginErr");
-
-const perfilPill = document.getElementById("perfilPill");
-const baseInfo = document.getElementById("baseInfo");
-
-const tabs = document.querySelectorAll(".tab");
-const tabPainel = document.getElementById("tabPainel");
-const tabDetalhe = document.getElementById("tabDetalhe");
-const tabAdmin = document.getElementById("tabAdmin");
-const tabAdminBtn = document.getElementById("tabAdminBtn");
-
-const adminBox = document.getElementById("adminBox");
-const statusGrid = document.getElementById("statusGrid");
-
-const filtroMes = document.getElementById("filtroMes");
-const filtroStatus = document.getElementById("filtroStatus");
-
-const filtroMes2 = document.getElementById("filtroMes2");
-const filtroStatus2 = document.getElementById("filtroStatus2");
-const searchTxt = document.getElementById("searchTxt");
-
-const tbodyDetalhe = document.getElementById("tbodyDetalhe");
-const footCount = document.getElementById("footCount");
-
-const modalBackdrop = document.getElementById("modalBackdrop");
-const modalTitle = document.getElementById("modalTitle");
-const modalBody = document.getElementById("modalBody");
-
-/* Admin elements */
-const fileInput = document.getElementById("fileInput");
-const btnImport = document.getElementById("btnImport");
-const importMsg = document.getElementById("importMsg");
-const btnClear = document.getElementById("btnClear");
-const btnExportJson = document.getElementById("btnExportJson");
-
-document.getElementById("btnLogin").addEventListener("click", doLogin);
-document.getElementById("btnLogout").addEventListener("click", doLogout);
-document.getElementById("btnDemo").addEventListener("click", loadDemo);
-document.getElementById("btnCarregarTodos").addEventListener("click", () => {
-  filters.mes = "ALL";
-  filters.status = "ALL";
-  filters.q = "";
-  syncFiltersUI();
-  recomputeAll();
-});
-
-btnImport.addEventListener("click", async () => {
-  if(!isAdmin()) return;
-  const f = fileInput.files?.[0];
-  if(!f){
-    showImportMsg("Selecione um arquivo primeiro.", true);
-    return;
-  }
-  try{
-    showImportMsg("Importando... aguenta aí 😅", false);
-    const rows = await parseFileToRows(f);
-    if(!rows.length) throw new Error("Arquivo sem linhas válidas.");
-    setBase(rows, { filename:f.name, importedAt: new Date().toISOString() });
-    showImportMsg("Importado com sucesso ✅", false);
-  }catch(err){
-    showImportMsg("Erro ao importar: " + err.message, true);
-  }
-});
-
-btnClear.addEventListener("click", () => {
-  if(!isAdmin()) return;
-  if(!confirm("Tem certeza que quer EXCLUIR a base salva?")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(STORAGE_META);
-  rawRows = [];
-  contracts = [];
-  updateBaseInfo();
-  recomputeAll();
-  alert("Base excluída. Agora você pode importar outra.");
-});
-
-btnExportJson.addEventListener("click", () => {
-  if(!isAdmin()) return;
-  const payload = { meta: getMeta(), rawRows, contracts };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "backup_remessas.json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
-
-/* Modal */
-document.getElementById("modalClose").addEventListener("click", closeModal);
-modalBackdrop.addEventListener("click", (e) => {
-  if(e.target === modalBackdrop) closeModal();
-});
-
-/* Filters */
-filtroMes.addEventListener("change", () => { filters.mes = filtroMes.value; sync2(); recomputeAll(); });
-filtroStatus.addEventListener("change", () => { filters.status = filtroStatus.value; sync2(); recomputeAll(); });
-
-filtroMes2.addEventListener("change", () => { filters.mes = filtroMes2.value; sync1(); recomputeAll(); });
-filtroStatus2.addEventListener("change", () => { filters.status = filtroStatus2.value; sync1(); recomputeAll(); });
-
-searchTxt.addEventListener("input", () => { filters.q = searchTxt.value.trim(); recomputeAll(); });
-
-function sync1(){
-  filtroMes.value = filters.mes;
-  filtroStatus.value = filters.status;
-}
-function sync2(){
-  filtroMes2.value = filters.mes;
-  filtroStatus2.value = filters.status;
-}
-function syncFiltersUI(){
-  filtroMes.value = filters.mes;
-  filtroStatus.value = filters.status;
-  filtroMes2.value = filters.mes;
-  filtroStatus2.value = filters.status;
-  searchTxt.value = filters.q;
-}
-
-/* Tabs */
-tabs.forEach(t => t.addEventListener("click", () => {
-  tabs.forEach(x => x.classList.remove("active"));
-  t.classList.add("active");
-  const id = t.getAttribute("data-tab");
-  tabPainel.style.display = id==="tabPainel" ? "" : "none";
-  tabDetalhe.style.display = id==="tabDetalhe" ? "" : "none";
-  tabAdmin.style.display  = id==="tabAdmin"  ? "" : "none";
-}));
-
-/* =========================
-   LOGIN
-========================= */
-function doLogin(){
-  const u = document.getElementById("loginUser").value.trim().toLowerCase();
-  const p = document.getElementById("loginPass").value.trim();
-
-  loginErr.style.display = "none";
-  loginErr.textContent = "";
-
-  const entry = USERS[u];
-  if(!entry || entry.pass !== p){
-    loginErr.style.display = "block";
-    loginErr.textContent = "Usuário ou senha inválidos.";
-    return;
-  }
-
-  session = { user: u, role: entry.role };
-  localStorage.setItem("AA_SESSION_role", entry.role);
-  localStorage.setItem("AA_SESSION_user", u);
-
-  loginScreen.style.display = "none";
-  appScreen.style.display = "";
-  perfilPill.textContent = `Perfil: ${entry.role}`;
-
-  // Admin tab
-  if(isAdmin()){
-    tabAdminBtn.style.display = "";
-    adminBox.style.display = "";
-  }else{
-    tabAdminBtn.style.display = "none";
-    adminBox.style.display = "none";
-  }
-
-  // Load base if exists
-  loadSavedBase();
-  buildFilters();
-  recomputeAll();
-}
-
-function doLogout(){
-  session = null;
-  localStorage.removeItem("AA_SESSION_role");
-  localStorage.removeItem("AA_SESSION_user");
-  appScreen.style.display = "none";
-  loginScreen.style.display = "flex";
-}
-
-function isAdmin(){
-  return session?.role === "Administrador";
-}
-
-/* =========================
-   LOAD/SAVE BASE
-========================= */
-function setBase(rows, meta){
-  rawRows = normalizeRows(rows);
-  contracts = buildContracts(rawRows);
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(rawRows));
-  localStorage.setItem(STORAGE_META, JSON.stringify(meta || {}));
-
-  updateBaseInfo();
-  buildFilters();
-  recomputeAll();
-}
-
-function loadSavedBase(){
-  try{
-    const s = localStorage.getItem(STORAGE_KEY);
-    const m = localStorage.getItem(STORAGE_META);
-    rawRows = s ? JSON.parse(s) : [];
-    rawRows = normalizeRows(rawRows);
-    contracts = buildContracts(rawRows);
-
-    updateBaseInfo(m ? JSON.parse(m) : null);
-  }catch{
-    rawRows = [];
-    contracts = [];
-    updateBaseInfo();
-  }
-}
-
-function getMeta(){
-  try{
-    return JSON.parse(localStorage.getItem(STORAGE_META) || "{}");
-  }catch{
-    return {};
-  }
-}
-
-function updateBaseInfo(metaOverride){
-  const meta = metaOverride || getMeta();
-  if(rawRows.length){
-    const dt = meta.importedAt ? new Date(meta.importedAt) : null;
-    baseInfo.textContent = `Base: ${meta.filename || "(importada)"} • Linhas: ${rawRows.length} • Contratos: ${contracts.length}` + (dt ? ` • Importado: ${formatDateBR(dt)}` : "");
-  }else{
-    baseInfo.textContent = "Base: (sem dados carregados) • Use Carregar Demo ou (Admin) importe um arquivo.";
-  }
-}
-
-/* =========================
-   IMPORT PARSERS
-========================= */
-async function parseFileToRows(file){
-  const ext = file.name.toLowerCase().split(".").pop();
-  if(ext === "csv"){
-    const text = await file.text();
-    return parseCSV(text);
-  }
-  if(ext === "xls" || ext === "xlsx"){
-    const ab = await file.arrayBuffer();
-    const wb = XLSX.read(ab, { type:"array" });
-    const sheetName = wb.SheetNames[0];
-    const ws = wb.Sheets[sheetName];
-    const json = XLSX.utils.sheet_to_json(ws, { defval:"" });
-    return json;
-  }
-  throw new Error("Formato não suportado.");
-}
-
-function parseCSV(text){
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
-  if(!lines.length) return [];
-  const sep = lines[0].includes(";") ? ";" : ",";
-  const headers = splitCSVLine(lines[0], sep).map(h => h.trim());
-  const out = [];
-  for(let i=1;i<lines.length;i++){
-    const cols = splitCSVLine(lines[i], sep);
-    const obj = {};
-    headers.forEach((h,idx) => obj[h] = (cols[idx] ?? "").trim());
-    out.push(obj);
-  }
-  return out;
-}
-
-function splitCSVLine(line, sep){
-  const res = [];
-  let cur = "";
-  let inQ = false;
-  for(let i=0;i<line.length;i++){
-    const ch = line[i];
-    if(ch === '"'){
-      inQ = !inQ;
-    }else if(ch === sep && !inQ){
-      res.push(cur);
-      cur = "";
-    }else{
-      cur += ch;
-    }
-  }
-  res.push(cur);
-  return res.map(s => s.replace(/^"|"$/g,""));
-}
-
-/* =========================
-   NORMALIZATION / MAPPING
-========================= */
-function normalizeKey(k){
-  return String(k || "")
-    .toLowerCase()
-    .normalize("NFD").replace(/\p{Diacritic}/gu,"")
-    .replace(/[\s\-_]+/g," ")
-    .trim();
-}
-
-function pick(obj, candidates){
-  const keys = Object.keys(obj || {});
-  const map = new Map(keys.map(k => [normalizeKey(k), k]));
-  for(const c of candidates){
-    const nk = normalizeKey(c);
-    if(map.has(nk)) return obj[map.get(nk)];
-  }
-  // partial matches
-  for(const [nk, orig] of map.entries()){
-    for(const c of candidates){
-      const want = normalizeKey(c);
-      if(nk.includes(want)) return obj[orig];
-    }
-  }
-  return "";
-}
-
-function normalizeRows(rows){
-  const out = [];
-  for(const r of (rows || [])){
-    const cliente  = pick(r, ["cliente","nome cliente","razao social"]);
-    const cnpj     = String(pick(r, ["cnpj","cpf/cnpj","cnpj cliente"])).replace(/[^\d]/g,"");
-    const contrato = pick(r, ["contrato","numero contrato","n contrato","contrato id"]);
-    const vendedor = pick(r, ["vendedor","representante","consultor"]);
-    const traco    = pick(r, ["traco","traço","produto","material","agregado","tipo"]);
-    const obra     = pick(r, ["nome da obra","obra","empreendimento"]);
-    const volObra  = pick(r, ["volume da obra","volume obra","volume"]);
-    const dtRaw    = pick(r, ["data da remessa","data remessa","dt remessa","ultima remessa","última remessa","data","dt"]);
-    const data     = parseDateAny(dtRaw);
-
-    // Se não tem contrato, cria um fallback com CNPJ + traco (pra não perder tudo)
-    const contratoKey = String(contrato || "").trim() || (cnpj ? `${cnpj}-${String(traco||"").trim()}` : `SEM_CONTRATO-${Math.random().toString(16).slice(2)}`);
-
-    // Só guarda linhas que tenham data (senão não dá pra calcular)
-    if(!data) continue;
-
-    out.push({
-      Cliente: String(cliente || "").trim(),
-      CNPJ: cnpj,
-      Contrato: String(contratoKey).trim(),
-      Vendedor: String(vendedor || "").trim(),
-      Traco: String(traco || "").trim(),
-      Obra: String(obra || "").trim(),
-      VolumeObra: String(volObra || "").trim(),
-      DataRemessa: data.toISOString()
+function importar(){
+  const f=file.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const linhas=e.target.result.split("\n").slice(1);
+    dados=linhas.map(l=>{
+      const c=l.split(";");
+      return {
+        cliente:c[0],
+        contrato:c[1],
+        vendedor:c[2],
+        traco:c[3],
+        data:c[4]
+      };
     });
-  }
-  return out;
+    localStorage.setItem("dados",JSON.stringify(dados));
+    render();
+  };
+  r.readAsText(f);
 }
 
-/* =========================
-   CONTRACT AGGREGATION
-========================= */
-function buildContracts(rows){
-  const map = new Map();
-
-  for(const rr of rows){
-    const data = new Date(rr.DataRemessa);
-    const key = rr.Contrato;
-
-    if(!map.has(key)){
-      map.set(key, {
-        Cliente: rr.Cliente,
-        CNPJ: rr.CNPJ,
-        Contrato: rr.Contrato,
-        Vendedor: rr.Vendedor,
-        Traco: rr.Traco,
-        Obra: rr.Obra,
-        VolumeObra: rr.VolumeObra,
-        UltimaRemessa: data,
-      });
-    }else{
-      const it = map.get(key);
-      if(data > it.UltimaRemessa) it.UltimaRemessa = data;
-
-      // Preenche campos vazios com o que vier
-      if(!it.Cliente && rr.Cliente) it.Cliente = rr.Cliente;
-      if(!it.CNPJ && rr.CNPJ) it.CNPJ = rr.CNPJ;
-      if(!it.Vendedor && rr.Vendedor) it.Vendedor = rr.Vendedor;
-      if(!it.Traco && rr.Traco) it.Traco = rr.Traco;
-      if(!it.Obra && rr.Obra) it.Obra = rr.Obra;
-      if(!it.VolumeObra && rr.VolumeObra) it.VolumeObra = rr.VolumeObra;
-    }
+function limpar(){
+  if(confirm("Excluir todos os dados?")){
+    localStorage.removeItem("dados");
+    dados=[];
+    render();
   }
+}
 
-  // compute days/status
-  const today = startOfDay(new Date());
+function render(){
+  let ok=0,w=0,g=0,a=0;
+  tbody.innerHTML="";
+  dados.forEach(d=>{
+    const dias=Math.floor((Date.now()-new Date(d.data))/(1000*60*60*24));
+    let s="OK",cls="ok";
+    if(dias>21){s="Plano de Ação";cls="action";a++}
+    else if(dias>14){s="Atenção Grave";cls="grave";g++}
+    else if(dias>7){s="Atenção";cls="warn";w++}
+    else ok++;
 
-  const list = Array.from(map.values()).map(it => {
-    const last = startOfDay(it.UltimaRemessa);
-    const diffDays = Math.floor((today - last) / 86400000);
-    const st = statusFromDays(diffDays);
-    return {
-      ...it,
-      UltimaRemessa: last,
-      DiasSemRemessa: diffDays,
-      StatusKey: st.key,
-      StatusLabel: st.label,
-      StatusColor: st.color,
-      StatusBadge: st.badge
-    };
+    tbody.innerHTML+=`
+      <tr>
+        <td>${d.cliente}</td>
+        <td>${d.contrato}</td>
+        <td>${d.vendedor}</td>
+        <td>${d.traco}</td>
+        <td>${d.data}</td>
+        <td>${dias}</td>
+        <td>${s}</td>
+      </tr>`;
   });
-
-  // Order by last remessa desc for table (latest first)
-  list.sort((a,b) => b.UltimaRemessa - a.UltimaRemessa);
-  return list;
+  ok.innerText=ok; warn.innerText=w; grave.innerText=g; action.innerText=a;
 }
-
-function startOfDay(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-
-/* =========================
-   FILTERS BUILD
-========================= */
-function buildFilters(){
-  const months = new Map(); // key -> label
-  for(const c of contracts){
-    const k = monthKey(c.UltimaRemessa);
-    const label = monthYear(c.UltimaRemessa);
-    months.set(k, label);
-  }
-
-  const monthList = Array.from(months.entries())
-    .sort((a,b) => a[0].localeCompare(b[0])); // chronological
-
-  const statusOpts = [
-    { value:"ALL", label:"Todos Status" },
-    ...STATUS.map(s => ({ value:s.key, label:s.label }))
-  ];
-
-  fillSelect(filtroStatus, statusOpts);
-  fillSelect(filtroStatus2, statusOpts);
-
-  const monthOpts = [{ value:"ALL", label:"Todos Meses" }, ...monthList.map(([k,l]) => ({value:k, label:l}))];
-  fillSelect(filtroMes, monthOpts);
-  fillSelect(filtroMes2, monthOpts);
-
-  syncFiltersUI();
-}
-
-function fillSelect(sel, opts){
-  sel.innerHTML = "";
-  for(const o of opts){
-    const op = document.createElement("option");
-    op.value = o.value;
-    op.textContent = o.label;
-    sel.appendChild(op);
-  }
-}
-
-/* =========================
-   RECOMPUTE EVERYTHING
-========================= */
-function recomputeAll(){
-  renderStatusCards();
-  renderChart();
-  renderTable();
-}
-
-function applyContractFilters(list){
-  let out = [...list];
-
-  if(filters.mes !== "ALL"){
-    out = out.filter(c => monthKey(c.UltimaRemessa) === filters.mes);
-  }
-  if(filters.status !== "ALL"){
-    out = out.filter(c => c.StatusKey === filters.status);
-  }
-  if(filters.q){
-    const q = filters.q.toLowerCase();
-    out = out.filter(c =>
-      (c.Cliente || "").toLowerCase().includes(q) ||
-      (c.CNPJ || "").toLowerCase().includes(q) ||
-      (c.Contrato || "").toLowerCase().includes(q) ||
-      (c.Vendedor || "").toLowerCase().includes(q) ||
-      (c.Traco || "").toLowerCase().includes(q) ||
-      (c.Obra || "").toLowerCase().includes(q)
-    );
-  }
-  return out;
-}
-
-/* =========================
-   STATUS CARDS
-========================= */
-function renderStatusCards(){
-  const filtered = applyContractFilters(contracts);
-
-  const counts = {};
-  for(const s of STATUS) counts[s.key] = 0;
-  for(const c of filtered) counts[c.StatusKey]++;
-
-  statusGrid.innerHTML = "";
-
-  for(const s of STATUS){
-    const div = document.createElement("div");
-    div.className = "statusCard";
-    div.innerHTML = `
-      <div class="statusLine" style="background:${s.color}"></div>
-      <div class="statusTop">
-        <div>
-          <div class="statusName">${s.label}</div>
-          <div class="statusCount">${counts[s.key] || 0}</div>
-        </div>
-        <button class="miniBtn" data-open="${s.key}">Histórico</button>
-      </div>
-    `;
-    statusGrid.appendChild(div);
-  }
-
-  statusGrid.querySelectorAll("button[data-open]").forEach(b => {
-    b.addEventListener("click", () => openHistory(b.getAttribute("data-open")));
-  });
-}
-
-function openHistory(statusKey){
-  const filtered = applyContractFilters(contracts).filter(c => c.StatusKey === statusKey);
-  const st = STATUS.find(x => x.key === statusKey);
-  modalTitle.textContent = `Histórico • ${st ? st.label : statusKey} • (${filtered.length} contratos)`;
-
-  modalBody.innerHTML = filtered.map(c => `
-    <tr>
-      <td>${esc(c.Cliente)}</td>
-      <td>${esc(c.CNPJ)}</td>
-      <td>${esc(c.Contrato)}</td>
-      <td>${esc(c.Vendedor)}</td>
-      <td>${esc(c.Traco)}</td>
-      <td>${esc(c.Obra)}</td>
-      <td>${esc(c.VolumeObra)}</td>
-      <td>${formatDateBR(c.UltimaRemessa)}</td>
-      <td>${c.DiasSemRemessa}</td>
-      <td>${badgeHTML(c)}</td>
-    </tr>
-  `).join("");
-
-  modalBackdrop.style.display = "flex";
-}
-
-function closeModal(){
-  modalBackdrop.style.display = "none";
-}
-
-/* =========================
-   CHART
-========================= */
-function renderChart(){
-  const filtered = applyContractFilters(contracts);
-
-  // Group by month (of last remessa) and status
-  const bucket = new Map(); // monthKey -> {label, counts per status}
-  for(const c of filtered){
-    const mk = monthKey(c.UltimaRemessa);
-    const lbl = monthYear(c.UltimaRemessa);
-    if(!bucket.has(mk)){
-      const init = { label: lbl };
-      for(const s of STATUS) init[s.key] = 0;
-      bucket.set(mk, init);
-    }
-    bucket.get(mk)[c.StatusKey] += 1;
-  }
-
-  const months = Array.from(bucket.entries()).sort((a,b) => a[0].localeCompare(b[0]));
-  const labels = months.map(([k,v]) => v.label);
-
-  const datasets = STATUS.map(s => ({
-    label: s.label,
-    data: months.map(([k,v]) => v[s.key] || 0),
-    backgroundColor: s.color,
-    borderRadius: 10,
-    borderSkipped: false,
-    barThickness: 14,       // “colunas mais finas”
-    maxBarThickness: 16
-  }));
-
-  const ctx = document.getElementById("chartEvolucao");
-  if(chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "bar",
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode:"index", intersect:false },
-      plugins: {
-        legend: {
-          labels: { color: getCSS("--text"), font: { weight: "800" } }
-        },
-        tooltip: {
-          callbacks: {
-            title: (items) => items?.[0]?.label ? `Mês/Ano: ${items[0].label}` : ""
-          }
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          ticks: { color: getCSS("--muted"), font: { weight: "800" } },
-          grid: { color: "rgba(255,255,255,.06)" }
-        },
-        y: {
-          stacked: true,
-          ticks: { color: getCSS("--muted"), font: { weight: "800" }, precision:0 },
-          grid: { color: "rgba(255,255,255,.06)" },
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-
-/* =========================
-   TABLE
-========================= */
-function renderTable(){
-  const filtered = applyContractFilters(contracts);
-
-  tbodyDetalhe.innerHTML = filtered.map(c => `
-    <tr>
-      <td>${esc(c.Cliente)}</td>
-      <td>${esc(c.CNPJ)}</td>
-      <td>${esc(c.Contrato)}</td>
-      <td>${esc(c.Vendedor)}</td>
-      <td>${esc(c.Traco)}</td>
-      <td>${esc(c.Obra)}</td>
-      <td>${esc(c.VolumeObra)}</td>
-      <td>${formatDateBR(c.UltimaRemessa)}</td>
-      <td>${c.DiasSemRemessa}</td>
-      <td>${badgeHTML(c)}</td>
-    </tr>
-  `).join("");
-
-  footCount.textContent = `Exibindo ${filtered.length} contratos (com filtros aplicados).`;
-}
-
-function badgeHTML(c){
-  const s = STATUS.find(x => x.key === c.StatusKey);
-  const dot = s ? s.color : "#999";
-  const cls = c.StatusBadge || "";
-  return `
-    <span class="badge ${cls}">
-      <span class="dot" style="background:${dot}"></span>
-      ${esc(c.StatusLabel)}
-    </span>
-  `;
-}
-
-/* =========================
-   DEMO DATA
-========================= */
-function loadDemo(){
-  // Mini base demo pra você testar sem import
-  const today = startOfDay(new Date());
-  function daysAgo(n){
-    const d = new Date(today);
-    d.setDate(d.getDate() - n);
-    return d;
-  }
-
-  const demo = [
-    {Cliente:"Construtora Alfa", CNPJ:"12345678000199", Contrato:"CT-001", Vendedor:"João", Traco:"Brita 1", Obra:"Obra A", VolumeObra:"1200", DataRemessa: daysAgo(3).toISOString()},
-    {Cliente:"Construtora Alfa", CNPJ:"12345678000199", Contrato:"CT-002", Vendedor:"João", Traco:"Pó de Pedra", Obra:"Obra A", VolumeObra:"1200", DataRemessa: daysAgo(11).toISOString()},
-    {Cliente:"Engenharia Beta", CNPJ:"99887766000155", Contrato:"CT-101", Vendedor:"Maria", Traco:"Brita 2", Obra:"Obra B", VolumeObra:"800", DataRemessa: daysAgo(16).toISOString()},
-    {Cliente:"Terraplanagem Gama", CNPJ:"11122233000144", Contrato:"CT-777", Vendedor:"Carlos", Traco:"Brita 0", Obra:"Obra C", VolumeObra:"3000", DataRemessa: daysAgo(30).toISOString()},
-    {Cliente:"Terraplanagem Gama", CNPJ:"11122233000144", Contrato:"CT-888", Vendedor:"Carlos", Traco:"Brita 1", Obra:"Obra D", VolumeObra:"1500", DataRemessa: daysAgo(22).toISOString()},
-    {Cliente:"Obras Delta", CNPJ:"55566677000122", Contrato:"CT-909", Vendedor:"Ana", Traco:"Rachão", Obra:"Obra E", VolumeObra:"500", DataRemessa: daysAgo(7).toISOString()},
-  ];
-
-  setBase(demo, { filename:"DEMO", importedAt: new Date().toISOString() });
-}
-
-/* =========================
-   HELPERS
-========================= */
-function showImportMsg(msg, isErr){
-  importMsg.style.display = "block";
-  importMsg.textContent = msg;
-  importMsg.style.background = isErr ? "rgba(239,68,68,.10)" : "rgba(34,197,94,.10)";
-  importMsg.style.borderColor = isErr ? "rgba(239,68,68,.25)" : "rgba(34,197,94,.25)";
-  importMsg.style.color = isErr ? "#ffd1d1" : "#d6ffe3";
-}
-
-function esc(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;");
-}
-
-/* =========================
-   INIT (restore session)
-========================= */
-(function init(){
-  const role = localStorage.getItem("AA_SESSION_role");
-  const user = localStorage.getItem("AA_SESSION_user");
-  if(role && user){
-    session = { user, role };
-    loginScreen.style.display = "none";
-    appScreen.style.display = "";
-    perfilPill.textContent = `Perfil: ${role}`;
-
-    if(isAdmin()){
-      tabAdminBtn.style.display = "";
-      adminBox.style.display = "";
-    }else{
-      tabAdminBtn.style.display = "none";
-      adminBox.style.display = "none";
-    }
-
-    loadSavedBase();
-    buildFilters();
-    recomputeAll();
-  }
-})();
 </script>
 
 </body>
