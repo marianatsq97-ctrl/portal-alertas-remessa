@@ -2,185 +2,86 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Portal de Alertas – Remessas</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+
   <link rel="stylesheet" href="style.css" />
 
-  <!-- XLSX + Chart.js via CDN (não depende de pasta libs) -->
+  <!-- LIBS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
 <body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="loginScreen">
+  <div class="loginBox">
+    <img src="assets/logo-areia-ana.png" class="loginLogo" />
+    <h2>Portal de Alertas</h2>
+
+    <input id="loginUser" placeholder="Usuário" />
+    <input id="loginPass" type="password" placeholder="Senha" />
+
+    <button onclick="login()">Entrar</button>
+    <p id="loginError"></p>
+  </div>
+</div>
+
+<!-- SISTEMA -->
+<div id="app" class="hidden">
+
   <header class="topbar">
     <div class="brand">
-      <img class="logo" src="assets/logo-areia-ana.png" alt="Areia Ana" />
-      <div class="brandText">
+      <img src="assets/logo-areia-ana.png" class="logo" />
+      <div>
         <h1>Portal de Alertas – Remessas</h1>
-        <p>Controle de contratos sem remessa</p>
+        <span id="perfilInfo"></span>
       </div>
     </div>
 
-    <div class="topActions">
-      <button class="btn ghost" id="btnCarregarTodos" title="Limpa filtros e mostra tudo">Carregar todos</button>
-      <button class="btn" id="btnDemo">Carregar Demo</button>
-    </div>
+    <button class="btn ghost" onclick="logout()">Sair</button>
   </header>
 
-  <!-- Barra de filtros (no topo, do jeito certo) -->
-  <section class="panel filtersPanel">
-    <div class="filtersGrid">
-      <div class="field">
-        <label>Buscar</label>
-        <input id="fBusca" type="text" placeholder="Cliente, CNPJ, contrato, vendedor, traço, material..." />
-      </div>
-
-      <div class="field">
-        <label>Status</label>
-        <select id="fStatus">
-          <option value="__ALL__">Todos</option>
-          <option value="OK">OK (0–7)</option>
-          <option value="Atenção">Atenção (7–14)</option>
-          <option value="Atenção Grave">Atenção Grave (14–21)</option>
-          <option value="Plano de Ação">Plano de Ação (&gt;21)</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Ano</label>
-        <select id="fAno"></select>
-      </div>
-
-      <div class="field">
-        <label>Mês</label>
-        <select id="fMes"></select>
-      </div>
-
-      <div class="field">
-        <label>Somente agregados</label>
-        <select id="fAgregado">
-          <option value="1">Sim</option>
-          <option value="0">Não</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="filtersFooter">
-      <div class="hint" id="hintFonte">Fonte: nenhuma</div>
-      <div class="hint" id="hintRegistros">Registros exibidos: 0</div>
-    </div>
+  <!-- IMPORTAÇÃO (SÓ ADMIN) -->
+  <section id="importPanel" class="panel">
+    <h2>Importação de Dados</h2>
+    <input type="file" id="fileInput" />
+    <button onclick="importarArquivo()">Importar</button>
+    <button class="danger" onclick="excluirArquivo()">Excluir arquivo</button>
   </section>
 
-  <!-- RESUMO GERAL (SEM DUPLICAÇÃO) -->
+  <!-- DASHBOARD -->
   <section class="panel">
-    <div class="panelTitle">
-      <h2>Resumo Geral</h2>
-      <span class="subtitle">Contagem por <b>CONTRATOS</b>, atualiza com filtros em tempo real</span>
-    </div>
-
-    <div class="cards" id="cardsResumo"></div>
+    <h2>Resumo Geral</h2>
+    <div class="cards" id="cards"></div>
   </section>
 
-  <!-- EVOLUÇÃO -->
   <section class="panel">
-    <div class="panelTitle">
-      <h2>Evolução de remessas</h2>
-      <span class="subtitle">Barras por <b>mês/ano</b>, empilhado por status (cores oficiais)</span>
-    </div>
-
-    <div class="chartWrap">
-      <canvas id="chartEvolucao" height="120"></canvas>
-    </div>
+    <h2>Evolução de Remessas</h2>
+    <canvas id="grafico"></canvas>
   </section>
 
-  <!-- IMPORTAÇÃO / PERMISSÃO -->
-  <section class="panel" id="panelImport">
-    <div class="panelTitle">
-      <h2>Importação</h2>
-      <span class="subtitle">Aparece só para perfil com permissão</span>
-    </div>
-
-    <div class="importGrid">
-      <div class="field">
-        <label>Senha (admin)</label>
-        <input id="adminPass" type="password" placeholder="Digite a senha para habilitar importação" />
-      </div>
-
-      <div class="importActions">
-        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
-        <button class="btn" id="btnImportar">Importar arquivo</button>
-        <button class="btn danger" id="btnExcluirArquivo">Excluir arquivo</button>
-      </div>
-    </div>
-
-    <div class="importInfo">
-      <small>
-        * Segurança real é com backend. Aqui é “controle visual” (front-end) para não aparecer para quem é consulta.
-      </small>
-    </div>
-  </section>
-
-  <!-- DETALHAMENTO -->
+  <!-- TABELA -->
   <section class="panel">
-    <div class="panelTitle">
-      <h2>Detalhamento</h2>
-      <span class="subtitle">Última remessa por contrato + campos adicionais (obra/volume/dias)</span>
-    </div>
-
-    <div class="tableWrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>CNPJ</th>
-            <th>Contrato</th>
-            <th>Vendedor</th>
-            <th>Traço</th>
-            <th>Material</th>
-            <th>Última remessa</th>
-            <th>Quantidade</th>
-            <th>Dias sem remessa</th>
-            <th>Tempo</th>
-            <th>Nome da obra</th>
-            <th>Volume da obra</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+    <h2>Detalhamento</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Contrato</th>
+          <th>Vendedor</th>
+          <th>Traço</th>
+          <th>Última Remessa</th>
+          <th>Dias</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </section>
 
-  <!-- MODAL HISTÓRICO -->
-  <div class="modalBackdrop hidden" id="modalBackdrop">
-    <div class="modal">
-      <div class="modalHead">
-        <div>
-          <h3 id="modalTitle">Histórico</h3>
-          <p id="modalSubtitle">—</p>
-        </div>
-        <button class="btn ghost" id="btnFecharModal">Fechar</button>
-      </div>
+</div>
 
-      <div class="tableWrap modalTable">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>CNPJ</th>
-              <th>Contrato</th>
-              <th>Material</th>
-              <th>Última remessa</th>
-              <th>Quantidade</th>
-              <th>Dias</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="modalBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
