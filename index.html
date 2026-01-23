@@ -218,9 +218,31 @@ const users={
 
 let data=[];
 
+const elements={
+  login:document.getElementById("login"),
+  app:document.getElementById("app"),
+  perfil:document.getElementById("perfil"),
+  ok:document.getElementById("ok"),
+  warn:document.getElementById("warn"),
+  grave:document.getElementById("grave"),
+  action:document.getElementById("action"),
+  tbody:document.getElementById("tbody"),
+  adminOnly:[...document.querySelectorAll(".admin-only")]
+};
+
+function showLogin(){
+  elements.login.style.display="flex";
+  elements.app.style.display="none";
+}
+
+function showApp(){
+  elements.login.style.display="none";
+  elements.app.style.display="block";
+}
+
 function login(){
-  const u=user.value;
-  const p=pass.value;
+  const u=document.getElementById("user").value;
+  const p=document.getElementById("pass").value;
   if(!users[u]||users[u].pass!==p)return alert("Login inválido");
 
   localStorage.setItem("user",u);
@@ -234,14 +256,19 @@ function logout(){
 
 function init(){
   const u=localStorage.getItem("user");
-  if(!u)return;
+  if(!u||!users[u]){
+    localStorage.removeItem("user");
+    showLogin();
+    return;
+  }
 
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="block";
-  perfil.innerText="Perfil: "+users[u].role;
+  showApp();
+  elements.perfil.innerText="Perfil: "+users[u].role;
 
   if(users[u].role==="Administrador"){
-    document.querySelectorAll(".admin-only").forEach(e=>e.style.display="block");
+    elements.adminOnly.forEach(e=>e.style.display="block");
+  }else{
+    elements.adminOnly.forEach(e=>e.style.display="none");
   }
 
   data=JSON.parse(localStorage.getItem("data")||"[]");
@@ -287,12 +314,12 @@ function status(d){
 }
 
 function render(){
-  ok.innerText=warn.innerText=grave.innerText=action.innerText=0;
-  tbody.innerHTML="";
+  elements.ok.innerText=elements.warn.innerText=elements.grave.innerText=elements.action.innerText=0;
+  elements.tbody.innerHTML="";
   data.forEach(r=>{
     const [s,c]=status(r.dias);
     document.getElementById(c).innerText++;
-    tbody.innerHTML+=`<tr>
+    elements.tbody.innerHTML+=`<tr>
       <td>${r.cliente}</td>
       <td>${r.contrato}</td>
       <td>${r.data}</td>
@@ -302,7 +329,7 @@ function render(){
   });
 }
 
-init();
+document.addEventListener("DOMContentLoaded",init);
 </script>
 
 </body>
