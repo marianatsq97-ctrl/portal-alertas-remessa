@@ -1,132 +1,204 @@
+:root {
+  --bg: #0b1020;
+  --card: #121a33;
+  --text: #f4f6ff;
+  --muted: #b8c0e2;
+  --primary: #ff9f1a;
+  --border: #263154;
+  --success: #2ecc71;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #050505;
-  color: #fff;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: radial-gradient(circle at top, #1c2550 0%, var(--bg) 55%);
+  color: var(--text);
+  min-height: 100vh;
 }
 
-/* LOGIN */
-.loginScreen {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: radial-gradient(circle at top, #ff8c00, #000);
+.hero {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2rem 1rem 1rem;
 }
 
-.loginBox {
-  background: #111;
-  padding: 30px;
-  border-radius: 16px;
-  width: 300px;
-  text-align: center;
+h1,
+h2,
+p {
+  margin-top: 0;
 }
 
-.loginLogo {
-  height: 60px;
-  margin-bottom: 10px;
+.hero p {
+  color: var(--muted);
+  max-width: 680px;
 }
 
-.loginBox input {
-  width: 100%;
-  margin: 6px 0;
-  padding: 10px;
-  border-radius: 8px;
-  border: none;
-}
-
-.loginBox button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  background: #ff8c00;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-#loginError {
-  color: #ff4d4d;
-  font-size: 12px;
-}
-
-/* APP */
-.hidden { display: none; }
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  padding: 20px;
-}
-
-.brand {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.logo {
-  height: 40px;
-}
-
-.panel {
-  margin: 20px;
-  padding: 20px;
-  background: #0f0f0f;
-  border-radius: 14px;
-}
-
-.cards {
+.layout {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 1rem;
 }
 
 .card {
-  padding: 14px;
-  border-radius: 10px;
-  background: #111;
-  border-left: 6px solid;
+  background: linear-gradient(180deg, #151f3d, var(--card));
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
 }
 
-table {
+.stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.92rem;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
   width: 100%;
-  border-collapse: collapse;
+  background: #0f162d;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.7rem;
 }
 
-th {
-  background: #ff8c00;
-  color: #000;
-}
-
-td, th {
-  padding: 10px;
-  border-bottom: 1px solid #222;
-}
-
-.badge {
-  padding: 4px 10px;
-  border-radius: 20px;
-  color: #000;
-  font-weight: bold;
+.grid-2 {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .btn {
-  padding: 8px 14px;
-  border-radius: 20px;
-  border: none;
-  background: #ff8c00;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
   cursor: pointer;
 }
 
-.btn.ghost {
-  background: transparent;
-  border: 1px solid #ff8c00;
-  color: #ff8c00;
+.btn-primary {
+  background: var(--primary);
+  color: #1a1300;
+  font-weight: 700;
 }
 
-.danger {
-  background: #e74c3c;
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.item {
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: #0f162d;
+}
+
+.item.done {
+  opacity: 0.7;
+  border-color: #2f6a4a;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin: 0.4rem 0;
+}
+
+.badge {
+  font-size: 0.76rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.badge.agora {
+  border-color: #ff7f50;
+}
+.badge.hoje {
+  border-color: #ffd166;
+}
+.badge.depois {
+  border-color: #7aa2ff;
+}
+
+.actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-top: 0.45rem;
+}
+
+.filters {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin-bottom: 0.8rem;
+}
+
+dialog {
+  border: none;
+  border-radius: 1rem;
+  padding: 0;
+  max-width: 620px;
+  width: calc(100% - 2rem);
+}
+
+dialog::backdrop {
+  background: rgba(7, 10, 23, 0.7);
+}
+
+.execution-box {
+  background: var(--card);
+  color: var(--text);
+  padding: 1rem;
+}
+
+.execution-focus {
+  background: #0f162d;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  margin: 0.8rem 0;
 }
