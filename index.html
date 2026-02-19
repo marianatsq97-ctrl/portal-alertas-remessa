@@ -147,6 +147,13 @@ const users={admin:{pass:"1234",role:"Administrador"},usuario:{pass:"1234",role:
 let data=[];
 let pedidos=[];
 
+function safeParse(key){
+  try{return JSON.parse(localStorage.getItem(key)||"[]")}catch(_){
+    localStorage.removeItem(key);
+    return [];
+  }
+}
+
 const elements={
   login:document.getElementById("login"),app:document.getElementById("app"),perfil:document.getElementById("perfil"),
   ok:document.getElementById("ok"),warn:document.getElementById("warn"),grave:document.getElementById("grave"),action:document.getElementById("action"),
@@ -168,11 +175,14 @@ function logout(){localStorage.removeItem("user");location.reload()}
 function init(){
   const u=localStorage.getItem("user");
   if(!u||!users[u]){localStorage.removeItem("user");showLogin();return}
+
   showApp();
   elements.perfil.innerText="Perfil: "+users[u].role;
   elements.adminOnly.forEach(e=>e.style.display=users[u].role==="Administrador"?"block":"none");
-  data=JSON.parse(localStorage.getItem("data")||"[]");
-  pedidos=JSON.parse(localStorage.getItem("pedidos")||"[]");
+
+  data=safeParse("data");
+  pedidos=safeParse("pedidos");
+
   render();
   renderPedidos();
 }
@@ -275,7 +285,15 @@ function renderPedidos(){
   });
 }
 
-document.addEventListener("DOMContentLoaded",init);
+document.addEventListener("DOMContentLoaded",()=>{
+  try{
+    init();
+  }catch(err){
+    console.error("Falha ao iniciar o portal:", err);
+    showLogin();
+    alert("Ocorreu um erro ao carregar dados locais. Tente limpar o cache do navegador.");
+  }
+});
 </script>
 </body>
 </html>
