@@ -33,4 +33,5 @@ Checklist:
 - Este projeto agora força atualização com versão nos assets (`?v=20260222b`).
 - O workflow de Pages foi ampliado para `main`, `master` e `work` para evitar deploy no branch errado.
 - Se ainda aparecer versão antiga, faça `Ctrl+F5`/limpeza de cache e reimporte o `.xlsx`.
+- Tabela com paginação para melhorar desempenho em arquivos grandes.
 

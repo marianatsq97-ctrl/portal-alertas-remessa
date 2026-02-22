@@ -1,14 +1,19 @@
-const STORAGE_KEY = "portal-remessas.v3";
+const STORAGE_KEY = "portal-remessas.v4";
+const PAGE_SIZE = 250;
 
 const fileInput = document.getElementById("fileInput");
 const btnImport = document.getElementById("btnImport");
 const btnLoadDemo = document.getElementById("btnLoadDemo");
 const btnClear = document.getElementById("btnClear");
 const btnUpdateChart = document.getElementById("btnUpdateChart");
+const btnPrevPage = document.getElementById("btnPrevPage");
+const btnNextPage = document.getElementById("btnNextPage");
+
 const filterYear = document.getElementById("filterYear");
 const filterMonth = document.getElementById("filterMonth");
 const toggleMaterial = document.getElementById("toggleMaterial");
 const importInfo = document.getElementById("importInfo");
+const tableInfo = document.getElementById("tableInfo");
 
 const okCount = document.getElementById("okCount");
 const warnCount = document.getElementById("warnCount");
@@ -25,30 +30,8 @@ const thMaterial = document.getElementById("thMaterial");
 
 let raw = readJSON(STORAGE_KEY, []);
 let showMaterial = false;
-
-
-function cleanupLegacyStorage() {
-  const legacyKeys = ["portal-remessas.v2", "remessas", "dados", "portalData"];
-  legacyKeys.forEach((key) => {
-    if (key !== STORAGE_KEY) localStorage.removeItem(key);
-  });
-
-  if (!Array.isArray(raw)) {
-    raw = [];
-    return;
-  }
-
-  const looksCorrupted = raw.some((row) => {
-    const text = JSON.stringify(row || {});
-    return text.includes("�") || text.includes("PK\u0003\u0004") || text.length > 20000;
-  });
-
-  if (looksCorrupted) {
-    raw = [];
-    save();
-    importInfo.textContent = "Dados antigos corrompidos foram limpos. Importe o XLSX novamente.";
-  }
-}
+let currentPage = 1;
+let currentFiltered = [];
 
 function readJSON(key, fallback) {
   try {
@@ -62,12 +45,36 @@ function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
 }
 
+function safeText(value) {
+  return String(value || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .replace(/�+/g, "")
+    .trim();
+}
+
+function cleanupLegacyStorage() {
+  ["portal-remessas.v2", "portal-remessas.v3", "remessas", "dados", "portalData"].forEach((key) => {
+    if (key !== STORAGE_KEY) localStorage.removeItem(key);
+  });
+
+  if (!Array.isArray(raw)) raw = [];
+
+  const looksCorrupted = raw.some((row) => {
+    const text = JSON.stringify(row || {});
+    return text.includes("PK\\u0003\\u0004") || text.includes("\uFFFD") || text.length > 25000;
+  });
+
+  if (looksCorrupted) {
+    raw = [];
+    save();
+    importInfo.textContent = "Dados locais antigos foram limpos. Importe novamente seu arquivo.";
+  }
+}
+
 function excelDateToJS(value) {
   if (typeof value !== "number") return null;
   const utcDays = Math.floor(value - 25569);
-  const utcValue = utcDays * 86400;
-  const dateInfo = new Date(utcValue * 1000);
-  return new Date(dateInfo.getFullYear(), dateInfo.getMonth(), dateInfo.getDate());
+  return new Date(utcDays * 86400 * 1000);
 }
 
 function parseDate(value) {
@@ -75,9 +82,9 @@ function parseDate(value) {
   if (value instanceof Date) return value;
 
   const excelDate = excelDateToJS(value);
-  if (excelDate) return excelDate;
+  if (excelDate && !Number.isNaN(excelDate.getTime())) return excelDate;
 
-  const s = String(value).trim();
+  const s = safeText(value);
   const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (br) return new Date(Number(br[3]), Number(br[2]) - 1, Number(br[1]));
 
@@ -86,15 +93,17 @@ function parseDate(value) {
 }
 
 function normalizeRow(row) {
-  const cnpj = String(row.CNPJ || row.cnpj || row["CNPJ CLIENTE"] || "").trim();
-  const cliente = String(row.Cliente || row.CLIENTE || row.cliente || "").trim();
-  const contrato = String(row.Contrato || row.CONTRATO || row.contrato || "Sem contrato").trim();
-  const material = String(row.Material || row.MATERIAL || row.material || "").trim();
+  const cnpj = safeText(row.CNPJ || row.cnpj || row["CNPJ CLIENTE"]);
+  const cliente = safeText(row.Cliente || row.CLIENTE || row.cliente);
+  const contrato = safeText(row.Contrato || row.CONTRATO || row.contrato || "Sem contrato");
+  const material = safeText(row.Material || row.MATERIAL || row.material);
+
   const dataRemessa = parseDate(
-    row["Data da remessa"] || row["DATA DA REMESSA"] || row.dataRemessa || row.data || row["Ultima Remessa"] || row["Última remessa"] || ""
+    row["Data da remessa"] || row["DATA DA REMESSA"] || row.dataRemessa || row.data || row["Ultima Remessa"] || row["Última remessa"]
   );
+
   const volume = Number(row["Volume da obra"] || row.volume_obra || row.Volume || row.Quantidade || row["Volume Obra"] || 0) || 0;
-  const obra = String(row["Nome da obra"] || row.nome_obra || row.Obra || row["Nome Obra"] || "").trim();
+  const obra = safeText(row["Nome da obra"] || row.nome_obra || row.Obra || row["Nome Obra"]);
 
   return {
     cnpj,
@@ -110,8 +119,7 @@ function normalizeRow(row) {
 
 function daysWithout(date) {
   if (!date) return 9999;
-  const ms = Date.now() - date.getTime();
-  return Math.max(0, Math.floor(ms / 86400000));
+  return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
 }
 
 function statusByDays(days) {
@@ -194,9 +202,15 @@ function renderSummary(items) {
 
 function renderTable(items) {
   thMaterial.style.display = showMaterial ? "table-cell" : "none";
-  const sorted = [...items].sort((a, b) => b.days - a.days);
 
-  tbody.innerHTML = sorted
+  const sorted = [...items].sort((a, b) => b.days - a.days);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = sorted.slice(start, start + PAGE_SIZE);
+
+  tbody.innerHTML = pageItems
     .map((item) => {
       const displayClient = item.cnpj ? `${item.cnpj} • ${item.cliente || "Sem nome"}` : item.cliente || "Sem nome";
       return `
@@ -213,6 +227,10 @@ function renderTable(items) {
       `;
     })
     .join("");
+
+  tableInfo.textContent = `Mostrando ${pageItems.length} de ${sorted.length} registros • Página ${currentPage}/${totalPages}`;
+  btnPrevPage.disabled = currentPage <= 1;
+  btnNextPage.disabled = currentPage >= totalPages;
 }
 
 function monthSeries(rows) {
@@ -258,6 +276,7 @@ function drawChart(rows) {
       ctx.fillStyle = color;
       ctx.fillRect(x, y, barW, bh);
     });
+
     ctx.fillStyle = "#a6b0d6";
     ctx.font = "12px sans-serif";
     ctx.fillText(s.label, x, h - 16);
@@ -266,7 +285,7 @@ function drawChart(rows) {
 
 function getRawByCurrentFilters() {
   return raw.filter((r) => {
-    const d = parseDate(r["Data da remessa"] || r["DATA DA REMESSA"] || r.dataRemessa || r.data || r["Ultima Remessa"] || r["Última remessa"] || "");
+    const d = parseDate(r["Data da remessa"] || r["DATA DA REMESSA"] || r.dataRemessa || r.data || r["Ultima Remessa"] || r["Última remessa"]);
     if (!d) return false;
     const y = filterYear.value;
     const m = Number(filterMonth.value);
@@ -277,20 +296,25 @@ function getRawByCurrentFilters() {
 function refresh() {
   const items = aggregate(raw);
   if (!filterYear.options.length) initFilters(items);
-  const view = filtered(items);
-  renderSummary(view);
-  renderTable(view);
+  currentFiltered = filtered(items);
+  renderSummary(currentFiltered);
+  renderTable(currentFiltered);
   drawChart(getRawByCurrentFilters());
 }
 
 function parseCSV(text) {
   const lines = text.split(/\r?\n/).filter(Boolean);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map((h) => h.trim());
+
+  const sep = lines[0].includes(";") ? ";" : ",";
+  const headers = lines[0].split(sep).map((h) => h.trim());
+
   return lines.slice(1).map((line) => {
-    const cols = line.split(",");
+    const cols = line.split(sep);
     const obj = {};
-    headers.forEach((h, i) => (obj[h] = (cols[i] || "").trim()));
+    headers.forEach((h, i) => {
+      obj[h] = safeText(cols[i]);
+    });
     return obj;
   });
 }
@@ -298,18 +322,14 @@ function parseCSV(text) {
 async function parseSpreadsheet(file) {
   const ext = file.name.toLowerCase().split(".").pop();
 
-  if (ext === "csv") {
-    return parseCSV(await file.text());
-  }
-
-  if (ext === "json") {
-    return JSON.parse(await file.text());
-  }
+  if (ext === "csv") return parseCSV(await file.text());
+  if (ext === "json") return JSON.parse(await file.text());
 
   if (ext === "xlsx" || ext === "xls") {
     if (!window.XLSX) throw new Error("Biblioteca XLSX não carregada.");
+
     const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: "array" });
+    const wb = XLSX.read(buffer, { type: "array", cellDates: true, raw: false });
     const ws = wb.Sheets[wb.SheetNames[0]];
     return XLSX.utils.sheet_to_json(ws, { defval: "" });
   }
@@ -322,9 +342,9 @@ btnLoadDemo.addEventListener("click", async () => {
   raw = await res.json();
   save();
   filterYear.innerHTML = "";
+  currentPage = 1;
   importInfo.textContent = "Demo carregada com sucesso.";
-  cleanupLegacyStorage();
-refresh();
+  refresh();
 });
 
 btnImport.addEventListener("click", async () => {
@@ -335,11 +355,11 @@ btnImport.addEventListener("click", async () => {
     raw = await parseSpreadsheet(file);
     save();
     filterYear.innerHTML = "";
+    currentPage = 1;
     importInfo.textContent = `Arquivo carregado: ${file.name} (${raw.length} linhas)`;
-    cleanupLegacyStorage();
-refresh();
-  } catch (error) {
-    importInfo.textContent = "Falha ao importar. Verifique o formato e os cabeçalhos.";
+    refresh();
+  } catch {
+    importInfo.textContent = "Falha ao importar. Verifique se escolheu XLSX/CSV/JSON válido.";
     alert("Não foi possível importar o arquivo.");
   }
 });
@@ -348,19 +368,41 @@ btnClear.addEventListener("click", () => {
   raw = [];
   save();
   filterYear.innerHTML = "";
+  currentPage = 1;
   importInfo.textContent = "Dados excluídos.";
-  cleanupLegacyStorage();
-refresh();
+  refresh();
 });
 
-filterYear.addEventListener("change", refresh);
-filterMonth.addEventListener("change", refresh);
+btnPrevPage.addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage -= 1;
+    renderTable(currentFiltered);
+  }
+});
+
+btnNextPage.addEventListener("click", () => {
+  const totalPages = Math.max(1, Math.ceil(currentFiltered.length / PAGE_SIZE));
+  if (currentPage < totalPages) {
+    currentPage += 1;
+    renderTable(currentFiltered);
+  }
+});
+
+filterYear.addEventListener("change", () => {
+  currentPage = 1;
+  refresh();
+});
+
+filterMonth.addEventListener("change", () => {
+  currentPage = 1;
+  refresh();
+});
+
 btnUpdateChart.addEventListener("click", refresh);
 
 toggleMaterial.addEventListener("change", (e) => {
   showMaterial = e.target.checked;
-  cleanupLegacyStorage();
-refresh();
+  renderTable(currentFiltered);
 });
 
 cleanupLegacyStorage();
