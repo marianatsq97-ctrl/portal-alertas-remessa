@@ -1,156 +1,47 @@
 # Portal de Alertas - Remessas
 
-Sistema visual para monitorar clientes sem remessa.
+Sistema web para importar dados de remessas (`.xlsx`, `.xls`, `.csv`, `.json`) e gerar alertas por contrato.
 
-## Funcionalidades
-- Importação de Excel (SQL42)
-- Dashboard com status
-- Tabela com filtros por coluna
-- Visual moderno (preto + laranja)
+## Link oficial
+- Repositório: `marianatsq97-ctrl/portal-alertas-remessa`
+- GitHub Pages: `https://marianatsq97-ctrl.github.io/portal-alertas-remessa/`
 
-## Publicação oficial deste projeto
-- Este portal deve permanecer publicado neste repositório: `marianatsq97-ctrl/portal-alertas-remessa`.
-- URL oficial do GitHub Pages: `https://marianatsq97-ctrl.github.io/portal-alertas-remessa/`.
-- Em **Settings → Pages**, mantenha a publicação pela branch principal deste mesmo repositório.
-## Erro comum ao copiar comandos no PowerShell (seu caso no print)
-No seu log, vários comandos foram colados **na mesma linha**, por isso o PowerShell interpretou tudo junto:
-- `Get-ChildItem -Forcecd ...` (virou parâmetro inválido `Forcecd`)
-- `cd "..."git status` (o `git` foi interpretado como parte do `cd`)
-- `git branch -agit checkout -b work` (o `git branch` leu `-g` como opção inválida)
+## Uso rápido (sem instalar nada)
+1. Abra o portal no GitHub Pages.
+2. Clique em **Selecionar arquivo** e importe sua planilha.
+3. Ajuste os filtros (ano, mês e período inicial/final).
+4. Confira os cards de resumo, gráfico e tabela detalhada.
 
-### Regra de ouro
-Execute **um comando por vez** e pressione **Enter** após cada linha.
+## Executar localmente (opcional)
+Na pasta do projeto:
 
-Exemplo correto:
-```powershell
-cd "C:\SISTEMAS MARIANA\portal-alertas-remessa"
-git status
-git branch -a
+```bash
+python3 -m http.server 4173
+```
+
+Depois abra:
+
+`http://localhost:4173`
+
+## Publicar atualização no GitHub (fluxo completo)
+> Faça exatamente 1 comando por linha no PowerShell/terminal.
+
+```bash
 git checkout work
 git pull origin work
-```
-
-### Como limpar o estado se você colou comandos errados
-Se aparecer no `git status` algo como `deleted: work` e também uma pasta `portal-alertas-remessa/` não rastreada, rode dentro do repositório:
-```powershell
-git restore --staged work 2>$null
-git restore work 2>$null
-Remove-Item -Recurse -Force .\portal-alertas-remessa\
-git status
-```
-
-Se o `git status` voltar para "working tree clean", continue normalmente:
-```powershell
-git checkout work
-git pull origin work
-```
-
-
-## Erro comum no Windows: `fatal: not a git repository`
-Se você estiver vendo esse erro no PowerShell, normalmente está executando comandos Git na pasta errada.
-
-### Passo a passo (copiar e colar)
-```powershell
-cd "C:\SISTEMAS MARIANA\portal-alertas-remessa"
-Get-ChildItem -Force
-```
-
-- Se a pasta estiver **vazia**, execute:
-```powershell
-git clone https://github.com/marianatsq97-ctrl/portal-alertas-remessa.git .
-```
-
-- Se a pasta **não estiver vazia**, execute:
-```powershell
-cd "C:\SISTEMAS MARIANA"
-git clone https://github.com/marianatsq97-ctrl/portal-alertas-remessa.git
-cd "C:\SISTEMAS MARIANA\portal-alertas-remessa"
-```
-
-Depois valide:
-```powershell
-git status
-git branch -a
-```
-
-Se aparecer `On branch main`, deu certo.
-
-### Se a branch `work` ainda não existir no seu clone/remoto
-No seu print, esse foi exatamente o erro (`src refspec work does not match any`), então crie a branch localmente a partir da `main` e publique:
-```powershell
-git checkout -b work
-git push -u origin work
-```
-
-### Se a branch `work` já existir
-```powershell
-git checkout work
-git push -u origin work
-```
-
-### Se aparecer `fatal: destination path '\.' already exists and is not an empty directory`
-Esse erro significa que o repositório **já está clonado** na pasta atual. Nesse caso, **não rode `git clone` novamente**.
-
-Use este fluxo:
-```powershell
-cd "C:\SISTEMAS MARIANA\portal-alertas-remessa"
-git status
-git checkout work
-git pull origin work
-```
-
-### Se no GitHub aparecer "There isn't anything to compare"
-Se a tela de **Comparing changes** mostrar que `main` e `work` são idênticas, significa que **não existe PR pendente** para mergear.
-
-Nesse caso, faça estas validações em sequência:
-1. Abra **Actions** e confirme o último workflow `pages build and deployment` com status verde.
-2. Abra **Settings → Pages** e clique em **Visit site**.
-3. Faça atualização forçada no navegador (`Ctrl+F5`) ou teste em aba anônima.
-4. Se ainda não refletir, aguarde 2 a 5 minutos e recarregue novamente (cache/CDN do Pages).
-
-Se você precisar publicar mudança nova, primeiro gere um commit novo na `work`:
-```powershell
-git checkout work
 git add .
-git commit -m "Nova atualização do portal"
+git commit -m "Atualiza portal"
 git push origin work
 ```
-Depois abra o PR `work -> main`.
 
-### Se você estiver na tela de conflito do GitHub (editor com `<<<<<<<`/`=======`/`>>>>>>>`)
-Quando abrir a tela **Resolve conflicts** do PR (como no seu print), faça assim:
-1. Resolva um arquivo por vez (`app.js`, `index.html`, `style.css`).
-2. Apague os marcadores de conflito: `<<<<<<<`, `=======`, `>>>>>>>`.
-3. Mantenha **apenas um bloco final** por arquivo (sem código duplicado).
-4. Clique em **Mark as resolved** em cada arquivo.
-5. Clique em **Commit merge**.
-6. Volte ao PR e clique em **Merge pull request**.
+Abra o GitHub e faça PR **work -> main**:
+1. **Pull requests** -> **New pull request**
+2. Base: `main` / Compare: `work`
+3. **Create pull request** -> **Merge pull request**
 
-Dica prática:
-- Se aparecer duas versões completas do arquivo, mantenha somente a versão correta e remova a outra inteira.
-- O arquivo só pode ficar com um conteúdo final limpo, sem nenhum marcador de conflito.
+## Publicação no Pages
+No GitHub: **Settings -> Pages**
+- Source: `Deploy from a branch`
+- Branch: `main` / `/root`
 
-### Fluxo final para publicar no GitHub Pages (quando já existe clone)
-1. Atualize `work`:
-   ```powershell
-   git checkout work
-   git pull origin work
-   ```
-2. No GitHub, abra o PR `work -> main`.
-3. Se o PR mostrar conflito, sincronize a branch local e envie:
-   ```powershell
-   git checkout work
-   git fetch origin
-   git merge origin/main
-   git add .
-   git commit -m "Resolve conflitos da work com main"
-   git push origin work
-   ```
-4. Faça o merge do PR e aguarde 1 a 3 minutos para o Pages atualizar.
-
-## Próximos passos (sugestão de evolução)
-- Cadastro digital de pedidos (cliente, material, quantidade, entrega).
-- Agendamento automático de entregas com ordem de carga para motorista.
-- Emissão de NF-e integrada (começando com emissão simulada e depois integração com SEFAZ).
-- App leve para motoristas confirmarem carregamento/entrega.
-- Fluxo de cancelamento com reemissão e redirecionamento de carga.
+Após merge, aguarde 1–3 minutos e atualize a página com `Ctrl + F5`.
