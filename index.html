@@ -1,423 +1,377 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal de Alertas – Remessas</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal de Alertas - Remessas</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js?v=2026-02-22d"></script>
   <style>
-    :root{
-      --bg:#050814; --card:#0b1020; --accent:#ff8c1a; --text:#f5f7ff;
-      --ok:#2ecc71; --warn:#f1c40f; --grave:#f39c12; --action:#e74c3c;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,Segoe UI,Roboto;background:radial-gradient(circle at top,#1a1f33,#050814 60%);color:var(--text)}
+    :root{--bg:#040913;--card:#0b152f;--line:#1b3268;--text:#e7edff;--muted:#aab7db;--accent:#ffac2f;--ok:#3de3b0;--warn:#ffe15b;--grave:#ffb84f;--action:#ff6a8a}
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#1d1730,#050910 60%);color:var(--text);font-family:system-ui,Segoe UI,Roboto,sans-serif}
     .hidden{display:none!important}
-    #login{min-height:100vh;display:flex;justify-content:center;align-items:center}
-    .login-card,.card{background:linear-gradient(180deg,#0d1224,#070b16);border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.45)}
-    .login-card{width:min(430px,94vw);padding:28px;text-align:center}
-    .login-card img{width:128px}
-    .login-card input,.toolbar input,.toolbar select,.toolbar button,.small,.modal-card input{width:100%;padding:11px;border-radius:10px;border:none;background:#0b1020;color:#fff}
-    .login-card button,.toolbar button,.small{background:var(--accent);font-weight:700;cursor:pointer}
-    .hint{font-size:12px;opacity:.8}
-    .link-btn{background:none;border:none;color:#ffcea0;text-decoration:underline;cursor:pointer;margin-top:8px}
-
-    .modal{position:fixed;inset:0;background:#02040bcc;display:none;align-items:center;justify-content:center;z-index:20}
-    .modal.open{display:flex}
-    .modal-card{width:min(460px,94vw);padding:18px;background:linear-gradient(180deg,#0d1224,#070b16);border-radius:16px}
-    .modal-actions{display:flex;gap:8px;margin-top:10px}
-
-    #app{display:none;padding:20px}
-    header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand img{width:52px}
-    .brand h1{font-size:28px;color:var(--accent);margin:0}
-    .card{padding:16px;margin-bottom:14px}
-
-    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    .stat{padding:14px;border-radius:12px;background:#090f1f;border-left:5px solid}
-    .stat h3{margin:0 0 6px;font-size:18px}
-    .stat .num{font-size:34px;font-weight:800}
-
-    .toolbar{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end}
-    .toolbar label{font-size:12px;opacity:.8}
-    .toolbar .field{display:flex;flex-direction:column;gap:4px}
-
-    table{width:100%;border-collapse:collapse}
-    th{background:var(--accent);color:#120a00;padding:9px;text-align:left}
-    td{padding:8px;border-bottom:1px solid #1b2548;vertical-align:top}
-    .table-wrap{overflow:auto}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}
-    .ok{background:#2ecc7130;color:#94f2ba}.warn{background:#f1c40f30;color:#ffec9a}.grave{background:#f39c1233;color:#ffd39f}.action{background:#e74c3c33;color:#ffb7ae}
-    .legend{font-size:13px;opacity:.9}
-
-    @media (max-width:1024px){
-      .grid{grid-template-columns:repeat(2,1fr)}
-      .toolbar{grid-template-columns:1fr 1fr}
-    }
+    .login{min-height:100vh;display:grid;place-items:center;padding:16px}
+    .card{background:linear-gradient(90deg,#050f2a,#071336 55%,#050b1f);border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 30px #0008}
+    .login .box{width:min(420px,100%);padding:24px;text-align:center}
+    input,select,button{background:#101d40;border:1px solid #274583;color:var(--text);padding:10px;border-radius:999px;font-size:16px}
+    button{cursor:pointer;font-weight:700}
+    .btn-primary{background:var(--accent);color:#261400;border-color:#d08017}
+    .btn-danger{background:#641f34;border-color:#9c3858;color:#ffd7e3}
+    .link{background:transparent;border:0;color:#ffd1a0;text-decoration:underline;padding:0;margin-top:6px}
+    .hint{font-size:13px;color:var(--muted)}
+    .app{max-width:1150px;margin:0 auto;padding:16px}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .brand{display:flex;gap:12px;align-items:center}.brand img{width:46px}
+    h1,h2{margin:0} h1{color:var(--accent)}
+    .toolbar{margin-top:12px;padding:14px;display:grid;gap:10px;grid-template-columns:1.4fr auto auto auto}
+    .toolbar-2{display:grid;gap:10px;grid-template-columns:1fr 1fr auto;align-items:center}
+    .file-name{font-size:13px;color:var(--muted)}
+    .summary{margin-top:14px;padding:14px}.summary-grid{display:grid;gap:10px;grid-template-columns:repeat(3,1fr)} .status-grid{display:grid;gap:10px;grid-template-columns:repeat(4,1fr);margin-top:10px}
+    .mini{padding:10px;border-radius:12px;background:#051333;border:1px solid #244277}.mini .n{font-size:40px;font-weight:800;line-height:1}
+    .mini.status{border-left:4px solid}
+    .ok{border-color:var(--ok)} .warn{border-color:var(--warn)} .grave{border-color:var(--grave)} .action{border-color:var(--action)}
+    .chart{margin-top:14px;padding:14px}.chart-wrap{height:280px;border-radius:12px;border:1px solid #254582;padding:10px;background:#020c24}
+    canvas{width:100%;height:100%}
+    .table{margin-top:14px;padding:14px}.table-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    table{width:100%;border-collapse:collapse;margin-top:10px} th,td{padding:8px;border-bottom:1px solid #233c6f;text-align:left} th{color:var(--accent)}
+    .badge{font-size:12px;border-radius:999px;padding:2px 8px;font-weight:700}
+    .badge.ok{background:#1f5b4a}.badge.warn{background:#6a5a12}.badge.grave{background:#6b4b1a}.badge.action{background:#6d2238}
+    .footer{margin-top:10px;color:var(--muted);font-size:13px}
+    .modal{position:fixed;inset:0;background:#01040bcc;display:none;place-items:center;padding:16px}.modal.open{display:grid}.modal .box{width:min(430px,100%);padding:18px}
+    @media (max-width:900px){.toolbar{grid-template-columns:1fr}.toolbar-2{grid-template-columns:1fr}.summary-grid,.status-grid{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
-  <section id="login">
-    <div class="login-card">
-      <img src="logo-areia-ana.png" alt="Logo Areia Ana">
+  <section id="loginScreen" class="login">
+    <div class="box card">
+      <img src="logo-areia-ana.png" alt="logo" width="120" />
       <h2>Portal de Alertas</h2>
-      <p class="hint">Controle de clientes sem remessa</p>
-      <input id="user" placeholder="Usuário">
-      <input id="pass" type="password" placeholder="Senha">
-      <button onclick="login()">Entrar</button>
-      <button class="link-btn" onclick="abrirRecuperacao()">Esqueci meu usuário/senha</button>
-      <p class="hint">Acesso padrão: admin/1234 ou usuario/1234.</p>
+      <p class="hint">Controle de clientes sem remessa.</p>
+      <input id="loginUser" placeholder="Usuário" />
+      <input id="loginPass" type="password" placeholder="Senha" style="margin-top:8px" />
+      <button class="btn-primary" onclick="login()" style="width:100%;margin-top:8px">Entrar</button>
+      <button class="link" onclick="abrirRecuperacao()">Esqueci meu usuário/senha</button>
+      <p class="hint">Acesso padrão: admin/1234 e usuario/1234</p>
     </div>
   </section>
 
   <div id="recoveryModal" class="modal">
-    <div class="modal-card">
+    <div class="box card">
       <h3>Recuperação de conta</h3>
-      <p class="hint">Use usuário + chave de recuperação para definir nova senha.</p>
-      <input id="recoveryUser" placeholder="Usuário">
-      <input id="recoveryKey" placeholder="Chave de recuperação">
-      <input id="newPass" type="password" placeholder="Nova senha">
-      <div class="modal-actions">
-        <button class="small" onclick="fecharRecuperacao()">Cancelar</button>
-        <button onclick="recuperarConta()">Salvar nova senha</button>
-      </div>
+      <input id="recoveryUser" placeholder="Usuário" />
+      <input id="recoveryKey" placeholder="Chave de recuperação" style="margin-top:8px" />
+      <input id="newPass" type="password" placeholder="Nova senha" style="margin-top:8px" />
+      <div style="display:flex;gap:8px;margin-top:10px"><button onclick="fecharRecuperacao()">Cancelar</button><button class="btn-primary" onclick="recuperarConta()">Salvar</button></div>
     </div>
   </div>
 
-  <main id="app">
-    <header>
+  <main id="app" class="app hidden">
+    <div class="head">
       <div class="brand">
-        <img src="logo-areia-ana.png" alt="Logo Areia Ana">
+        <img src="logo-areia-ana.png" alt="logo" />
         <div>
-          <h1>Portal de Alertas – Remessas</h1>
-          <div class="hint" id="perfil"></div>
+          <h1>Portal de Alertas - Remessas</h1>
+          <div class="hint">Controle de clientes sem remessa.</div>
         </div>
       </div>
-      <button class="small" onclick="logout()" style="width:auto;padding:10px 14px">Sair</button>
-    </header>
+      <button onclick="logout()">Sair</button>
+    </div>
 
-    <section class="card">
-      <div class="legend" id="legendaResumo">Legenda: 0–7 OK (verde), 8–14 Atenção (amarelo), 15–21 Atenção grave (laranja), acima de 21 Plano de ação (vermelho).</div>
-      <div class="hint" id="registrosInfo">Registros exibidos: 0 • Clientes únicos: 0</div>
-      <div class="grid" style="margin-top:10px">
-        <div class="stat" style="border-color:var(--ok)"><h3>OK</h3><div id="ok" class="num">0</div><small>0–7 dias sem remessa</small></div>
-        <div class="stat" style="border-color:var(--warn)"><h3>Atenção</h3><div id="warn" class="num">0</div><small>8–14 dias sem remessa</small></div>
-        <div class="stat" style="border-color:var(--grave)"><h3>Atenção grave</h3><div id="grave" class="num">0</div><small>15–21 dias sem remessa</small></div>
-        <div class="stat" style="border-color:var(--action)"><h3>Plano de ação</h3><div id="action" class="num">0</div><small>Acima de 21 dias sem remessa</small></div>
+    <section class="toolbar card">
+      <div>
+        <input id="fileInput" type="file" accept=".csv,.xlsx,.xls" style="width:100%" />
+        <div class="file-name" id="fileInfo">Nenhum arquivo selecionado</div>
+      </div>
+      <button class="btn-primary" onclick="importFile()">Carregar arquivo</button>
+      <button onclick="carregarDemo()">Carregar demo</button>
+      <button class="btn-danger" onclick="clearData()">Excluir dados</button>
+      <div id="importMessage" class="hint" style="grid-column:1/-1"></div>
+      <div class="toolbar-2" style="grid-column:1/-1">
+        <select id="anoFiltro" onchange="render()"><option value="">Ano: todos</option></select>
+        <select id="mesFiltro" onchange="render()"><option value="">Mês: todos</option></select>
+        <label class="hint"><input id="showMaterial" type="checkbox" onchange="render()" /> Mostrar materiais/produtos</label>
       </div>
     </section>
 
-    <section class="card admin-only">
-      <h3>Importação</h3>
-      <div class="toolbar">
-        <div class="field">
-          <label>Arquivo (.csv, .xlsx, .xls)</label>
-          <input id="file" type="file" accept=".csv,.xlsx,.xls">
-        </div>
-        <button onclick="importFile()">Carregar arquivo</button>
-        <button onclick="clearData()">Excluir dados</button>
+    <section class="summary card">
+      <h2>Resumo</h2>
+      <div class="summary-grid">
+        <div class="mini"><div class="n" id="totalContratos">0</div><div class="hint">Contratos exibidos</div></div>
+        <div class="mini"><div class="n" id="totalClientes">0</div><div class="hint">Clientes únicos (CNPJ)</div></div>
+        <div class="mini"><div class="n" id="totalVolume">0</div><div class="hint">Volume total da obra</div></div>
+      </div>
+      <div class="status-grid">
+        <div class="mini status ok"><h3>OK</h3><div id="ok" class="n">0</div><div class="hint">0 a 7 dias sem remessa</div></div>
+        <div class="mini status warn"><h3>Atenção</h3><div id="warn" class="n">0</div><div class="hint">8 a 14 dias sem remessa</div></div>
+        <div class="mini status grave"><h3>Atenção grave</h3><div id="grave" class="n">0</div><div class="hint">15 a 21 dias sem remessa</div></div>
+        <div class="mini status action"><h3>Plano de ação</h3><div id="action" class="n">0</div><div class="hint">&gt; 21 dias sem remessa</div></div>
       </div>
     </section>
 
-    <section class="card">
-      <h3>Filtros</h3>
-      <div class="toolbar">
-        <div class="field"><label>Cliente/CNPJ</label><input id="filtroCliente" placeholder="Digite cliente ou CNPJ" oninput="render()"></div>
-        <div class="field"><label>Contrato</label><input id="filtroContrato" placeholder="Digite contrato" oninput="render()"></div>
-        <div class="field"><label>Mês da última remessa</label><select id="filtroMes" onchange="render()"><option value="">Todos</option></select></div>
-        <div class="field"><label>Status</label><select id="filtroStatus" onchange="render()"><option value="">Todos</option><option>OK</option><option>Atenção</option><option>Atenção grave</option><option>Plano de ação</option></select></div>
-        <button onclick="limparFiltros()">Limpar filtros</button>
-      </div>
+    <section class="chart card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h2>Evolução de remessas</h2><button onclick="drawChart()">Atualizar gráfico</button></div>
+      <div class="chart-wrap"><canvas id="chartCanvas"></canvas></div>
     </section>
 
-    <section class="card">
-      <h3>Detalhamento</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>CNPJ</th>
-              <th>Cliente</th>
-              <th>Contrato(s)</th>
-              <th>Última remessa</th>
-              <th>Ritmo</th>
-              <th>Dias sem remessa</th>
-              <th>Volume da obra</th>
-              <th>Nome da obra</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+    <section class="table card">
+      <h2>Detalhamento</h2>
+      <div class="hint">Ordenado da maior para a menor urgência (dias sem remessa).</div>
+      <div class="table-top">
+        <div class="hint" id="pageInfo"></div>
+        <div><button onclick="prevPage()">Anterior</button><button onclick="nextPage()" style="margin-left:6px">Próxima</button></div>
       </div>
+      <table>
+        <thead><tr><th>CNPJ / Cliente</th><th>Contrato</th><th>Nome da obra</th><th>Volume da obra</th><th>Última remessa</th><th>Dias sem remessa</th><th>Status</th><th class="material-col hidden">Material</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
     </section>
+
+    <div class="footer" id="buildInfo">Build 2026-02-22d</div>
   </main>
 
-<script>
-const defaultUsers={
-  admin:{pass:"1234",role:"Administrador",recoveryKey:"AREIAANA-ADMIN"},
-  usuario:{pass:"1234",role:"Usuário",recoveryKey:"AREIAANA-USUARIO"}
-};
+  <script>
+    const BUILD = '2026-02-22d';
+    const DEFAULT_USERS = { admin:{ pass:'1234', role:'Administrador', recoveryKey:'AREIAANA-ADMIN' }, usuario:{ pass:'1234', role:'Usuário', recoveryKey:'AREIAANA-USUARIO' } };
+    const PAGE_SIZE = 12;
+    let users = {};
+    let rows = [];
+    let rendered = [];
+    let page = 1;
 
-const el={
-  login:document.getElementById("login"), app:document.getElementById("app"), perfil:document.getElementById("perfil"),
-  ok:document.getElementById("ok"), warn:document.getElementById("warn"), grave:document.getElementById("grave"), action:document.getElementById("action"),
-  tbody:document.getElementById("tbody"), file:document.getElementById("file"),
-  adminOnly:[...document.querySelectorAll(".admin-only")],
-  filtroCliente:document.getElementById("filtroCliente"), filtroContrato:document.getElementById("filtroContrato"),
-  filtroMes:document.getElementById("filtroMes"), filtroStatus:document.getElementById("filtroStatus"),
-  registrosInfo:document.getElementById("registrosInfo")
-};
+    const el = {
+      loginScreen:document.getElementById('loginScreen'), app:document.getElementById('app'),
+      fileInput:document.getElementById('fileInput'), fileInfo:document.getElementById('fileInfo'), importMessage:document.getElementById('importMessage'),
+      anoFiltro:document.getElementById('anoFiltro'), mesFiltro:document.getElementById('mesFiltro'), showMaterial:document.getElementById('showMaterial'),
+      totalContratos:document.getElementById('totalContratos'), totalClientes:document.getElementById('totalClientes'), totalVolume:document.getElementById('totalVolume'),
+      ok:document.getElementById('ok'), warn:document.getElementById('warn'), grave:document.getElementById('grave'), action:document.getElementById('action'),
+      tbody:document.getElementById('tbody'), pageInfo:document.getElementById('pageInfo'), chartCanvas:document.getElementById('chartCanvas')
+    };
 
-let users={};
-let rows=[];
+    function safeParse(key, fallback){ try{ const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; }catch(_){ localStorage.removeItem(key); return fallback; } }
+    function loadUsers(){ users = { ...DEFAULT_USERS, ...safeParse('users', {}) }; localStorage.setItem('users', JSON.stringify(users)); }
 
-function safeParseObj(key,fallback){
-  try{const val=JSON.parse(localStorage.getItem(key)); return val??fallback;}catch(_){localStorage.removeItem(key); return fallback;}
-}
-
-function loadUsers(){
-  const stored=safeParseObj("users",{});
-  users={...defaultUsers,...stored};
-  localStorage.setItem("users",JSON.stringify(users));
-}
-
-function openLogin(){el.login.style.display="flex"; el.app.style.display="none";}
-function openApp(){el.login.style.display="none"; el.app.style.display="block";}
-
-function login(){
-  const u=document.getElementById("user").value.trim();
-  const p=document.getElementById("pass").value;
-  loadUsers();
-  if(!users[u]||users[u].pass!==p){alert("Login inválido"); return;}
-  localStorage.setItem("user",u);
-  bootstrap();
-}
-
-function logout(){localStorage.removeItem("user"); openLogin();}
-function abrirRecuperacao(){document.getElementById("recoveryModal").classList.add("open");}
-function fecharRecuperacao(){document.getElementById("recoveryModal").classList.remove("open");}
-
-function recuperarConta(){
-  loadUsers();
-  const user=document.getElementById("recoveryUser").value.trim();
-  const key=document.getElementById("recoveryKey").value.trim();
-  const newPass=document.getElementById("newPass").value;
-  if(!user||!key||!newPass){alert("Preencha usuário, chave e nova senha."); return;}
-  if(!users[user]){alert("Usuário não encontrado."); return;}
-  if(users[user].recoveryKey!==key){alert("Chave de recuperação inválida."); return;}
-  users[user].pass=newPass;
-  localStorage.setItem("users",JSON.stringify(users));
-  fecharRecuperacao();
-  alert("Senha atualizada com sucesso.");
-}
-
-
-function decodeCsvWithFallback(buffer){
-  const candidates=[];
-  const utf8=new TextDecoder("utf-8",{fatal:false}).decode(buffer);
-  candidates.push({enc:"utf-8",text:utf8});
-  try{candidates.push({enc:"windows-1252",text:new TextDecoder("windows-1252").decode(buffer)});}catch(_){ }
-  try{candidates.push({enc:"iso-8859-1",text:new TextDecoder("iso-8859-1").decode(buffer)});}catch(_){ }
-
-  const score=(text)=>{
-    const replacement=(text.match(/�/g)||[]).length;
-    const control=(text.match(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g)||[]).length;
-    const hasKeywords=/(cliente|contrato|remessa|cnpj|obra)/i.test(text)?-80:0;
-    return replacement*10+control*4+hasKeywords;
-  };
-
-  candidates.sort((a,b)=>score(a.text)-score(b.text));
-  return candidates[0].text;
-}
-
-function cleanText(v){
-  return String(v??"")
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,"")
-    .replace(/\s+/g," ")
-    .trim();
-}
-
-function parseDate(v){
-  if(!v) return null;
-  if(v instanceof Date && !isNaN(v)) return v;
-  const s=String(v).trim();
-  if(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(s)){
-    const [d,m,y]=s.split('/').map(Number); return new Date(y<100?2000+y:y,m-1,d);
-  }
-  const d=new Date(s);
-  return isNaN(d)?null:d;
-}
-
-function findVal(obj,keys){
-  const norm=Object.fromEntries(Object.keys(obj).map(k=>[k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),obj[k]]));
-  for(const key of keys){
-    const v=norm[key];
-    if(v!==undefined && String(v).trim()!=="") return v;
-  }
-  return "";
-}
-
-function normalize(raw){
-  return raw.map(r=>{
-    const dt=parseDate(findVal(r,["data da remessa","data remessa","ultima remessa","data"]));
-    const cnpj=cleanText(findVal(r,["cnpj","cpf/cnpj","documento","chave cliente"])||"").replace(/\D/g,'');
-    const cliente=cleanText(findVal(r,["cliente","razao social","nome cliente"])||"");
-    const contrato=cleanText(findVal(r,["contrato","n contrato","numero contrato"])||"");
-    const volumeObra=cleanText(findVal(r,["volume da obra","volume obra","volume"])||"");
-    const nomeObra=cleanText(findVal(r,["nome da obra","obra","nome obra"])||"");
-    return {cnpj,cliente,contrato,volumeObra,nomeObra,dataRemessa:dt};
-  }).filter(r=>r.cliente||r.cnpj);
-}
-
-function aggregateByCnpj(list){
-  const map=new Map();
-  list.forEach(r=>{
-    const key=r.cnpj||`sem-cnpj:${r.cliente.toLowerCase()}`;
-    if(!map.has(key)) map.set(key,{...r,contratos:new Set(),obras:new Set(),volume:0});
-    const row=map.get(key);
-    if(r.contrato) row.contratos.add(r.contrato);
-    if(r.nomeObra) row.obras.add(r.nomeObra);
-    const vol=Number(String(r.volumeObra).replace(',','.'));
-    if(!Number.isNaN(vol)) row.volume+=vol;
-    if(!row.dataRemessa || (r.dataRemessa && r.dataRemessa>row.dataRemessa)) row.dataRemessa=r.dataRemessa;
-    if(!row.cliente && r.cliente) row.cliente=r.cliente;
-    if(!row.cnpj && r.cnpj) row.cnpj=r.cnpj;
-  });
-  return [...map.values()].map(r=>({
-    cnpj:r.cnpj||"-",
-    cliente:r.cliente||"-",
-    contratos:[...r.contratos],
-    nomeObra:[...r.obras].join(" | ")||"-",
-    volumeObra:r.volume?String(r.volume.toFixed(2)).replace('.',','):"-",
-    dataRemessa:r.dataRemessa
-  }));
-}
-
-function statusByDays(dias){
-  if(dias<=7) return {txt:"OK",cls:"ok"};
-  if(dias<=14) return {txt:"Atenção",cls:"warn"};
-  if(dias<=21) return {txt:"Atenção grave",cls:"grave"};
-  return {txt:"Plano de ação",cls:"action"};
-}
-
-function ritmo(dias){
-  if(dias>365) return `${Math.floor(dias/365)} ano(s)`;
-  if(dias>31) return `${Math.floor(dias/30)} mês(es)`;
-  return `${dias} dia(s)`;
-}
-
-function formatDate(d){return d?d.toLocaleDateString('pt-BR'):"-";}
-function ymKey(d){if(!d) return "Sem data"; return `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
-
-async function importFile(){
-  const file=el.file.files[0];
-  if(!file){alert("Escolha um arquivo."); return;}
-  try{
-    let raw=[];
-    if(/\.(xlsx|xls)$/i.test(file.name)){
-      const buf=await file.arrayBuffer();
-      const wb=XLSX.read(buf,{type:'array'});
-      raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
-    }else{
-      const buf=await file.arrayBuffer();
-      const txt=decodeCsvWithFallback(buf);
-      const wb=XLSX.read(txt,{type:'string',raw:false,codepage:65001});
-      raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
+    function login(){
+      loadUsers();
+      const u = document.getElementById('loginUser').value.trim();
+      const p = document.getElementById('loginPass').value;
+      if(!users[u] || users[u].pass !== p){ alert('Usuário ou senha inválidos.'); return; }
+      localStorage.setItem('user', u);
+      bootstrap();
     }
-    rows=normalize(raw);
-    const sample=rows.slice(0,30).map(r=>`${r.cliente} ${r.contrato} ${r.nomeObra}`).join(" ");
-    const garbled=(sample.match(/�/g)||[]).length;
-    if(garbled>20){
-      alert("O arquivo parece com codificação inválida. Salve como UTF-8 ou Excel (.xlsx) e tente novamente.");
-      return;
+    function logout(){ localStorage.removeItem('user'); el.app.classList.add('hidden'); el.loginScreen.classList.remove('hidden'); }
+    function abrirRecuperacao(){ document.getElementById('recoveryModal').classList.add('open'); }
+    function fecharRecuperacao(){ document.getElementById('recoveryModal').classList.remove('open'); }
+    function recuperarConta(){
+      loadUsers();
+      const u = document.getElementById('recoveryUser').value.trim();
+      const key = document.getElementById('recoveryKey').value.trim();
+      const np = document.getElementById('newPass').value;
+      if(!u || !key || !np){ alert('Preencha usuário, chave e nova senha.'); return; }
+      if(!users[u] || users[u].recoveryKey !== key){ alert('Usuário ou chave inválidos.'); return; }
+      users[u].pass = np;
+      localStorage.setItem('users', JSON.stringify(users));
+      fecharRecuperacao();
+      alert('Senha atualizada com sucesso.');
     }
-    localStorage.setItem("dataRows",JSON.stringify(rows));
-    render();
-    alert(`Arquivo carregado com sucesso: ${rows.length} registro(s).`);
-  }catch(e){
-    console.error(e);
-    alert("Falha ao importar arquivo. Verifique se é CSV/XLSX válido.");
-  }
-}
 
-function clearData(){ if(confirm("Excluir todos os dados importados?")){ localStorage.removeItem("dataRows"); rows=[]; render(); } }
+    function normHeader(text){ return String(text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/gi,'').toLowerCase(); }
+    const HEADER_ALIASES = {
+      cnpj:['cnpj','cpfcnpj','documento','chavecliente'],
+      cliente:['cliente','razaosocial','nomecliente'],
+      contrato:['contrato','ncontrato','numerocontrato'],
+      data:['datadaremessa','dataremessa','ultimaremessa','data'],
+      volume:['volumedaobra','volumeobra','volume','quantidade'],
+      obra:['nomedaobra','nomeobra','obra'],
+      material:['material','produto','itens','descricao']
+    };
+    function readByAlias(row, aliases){
+      const map = {};
+      for(const k of Object.keys(row)){ map[normHeader(k)] = row[k]; }
+      for(const alias of aliases){ if(map[alias] !== undefined && String(map[alias]).trim() !== '') return map[alias]; }
+      return '';
+    }
 
-function populateMonthFilter(items){
-  const current=el.filtroMes.value;
-  const opts=[...new Set(items.map(i=>ymKey(i.dataRemessa)).filter(v=>v!=="Sem data"))].sort((a,b)=>{
-    const [ma,ya]=a.split('/').map(Number), [mb,yb]=b.split('/').map(Number);
-    return yb-ya || mb-ma;
-  });
-  el.filtroMes.innerHTML='<option value="">Todos</option>'+opts.map(o=>`<option value="${o}">${o}</option>`).join('');
-  el.filtroMes.value=opts.includes(current)?current:"";
-}
+    function cleanText(v){ return String(v ?? '').replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[\uFFFD]/g,'').replace(/\s+/g,' ').trim(); }
+    function parseDate(v){
+      if(!v) return null;
+      if(v instanceof Date && !isNaN(v)) return v;
+      if(typeof v === 'number' && v > 20000 && v < 70000){ return new Date(Math.round((v - 25569) * 86400 * 1000)); }
+      const s = String(v).trim();
+      const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if(br){ const d=+br[1], m=+br[2]-1, y=+br[3] < 100 ? 2000 + +br[3] : +br[3]; return new Date(y,m,d); }
+      const iso = new Date(s);
+      return Number.isNaN(+iso) ? null : iso;
+    }
+    function parseVolume(v){ const n = Number(String(v ?? '').replace(/\./g,'').replace(',', '.').replace(/[^0-9.-]/g,'')); return Number.isFinite(n) ? n : 0; }
+    function decodeCsvWithFallback(buffer){
+      const opts = ['utf-8','windows-1252','iso-8859-1'].map(enc => ({ enc, text:new TextDecoder(enc, { fatal:false }).decode(buffer) }));
+      const score = (t)=> ((t.match(/�/g)||[]).length*30) + ((t.match(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g)||[]).length*6) - (/(cliente|cnpj|contrato|remessa|obra)/i.test(t) ? 40 : 0);
+      return opts.sort((a,b)=>score(a.text)-score(b.text))[0].text;
+    }
 
-function limparFiltros(){el.filtroCliente.value="";el.filtroContrato.value="";el.filtroMes.value="";el.filtroStatus.value="";render();}
+    function normalize(raw){
+      return raw.map(r=>{
+        const cnpj = cleanText(readByAlias(r, HEADER_ALIASES.cnpj)).replace(/\D/g,'');
+        const cliente = cleanText(readByAlias(r, HEADER_ALIASES.cliente));
+        const contrato = cleanText(readByAlias(r, HEADER_ALIASES.contrato));
+        const obra = cleanText(readByAlias(r, HEADER_ALIASES.obra));
+        const material = cleanText(readByAlias(r, HEADER_ALIASES.material));
+        const dataRemessa = parseDate(readByAlias(r, HEADER_ALIASES.data));
+        const volume = parseVolume(readByAlias(r, HEADER_ALIASES.volume));
+        return { cnpj, cliente, contrato, obra, material, dataRemessa, volume };
+      }).filter(r => r.cliente || r.cnpj);
+    }
 
-function render(){
-  const aggregated=aggregateByCnpj(rows).map(r=>{
-    const dias=r.dataRemessa?Math.max(0,Math.floor((Date.now()-r.dataRemessa)/86400000)):9999;
-    const st=statusByDays(dias);
-    return {...r,dias,status:st.txt,statusClass:st.cls,mes:ymKey(r.dataRemessa)};
-  }).sort((a,b)=>b.dias-a.dias); // prioriza sem remessa há mais tempo
+    function chooseSheet(wb){
+      let chosen = wb.SheetNames[0], max = -1;
+      wb.SheetNames.forEach(name=>{
+        const rowsCount = XLSX.utils.sheet_to_json(wb.Sheets[name], { header:1 }).length;
+        if(rowsCount > max){ max = rowsCount; chosen = name; }
+      });
+      return wb.Sheets[chosen];
+    }
 
-  populateMonthFilter(aggregated);
+    function statusByDays(days){ if(days<=7) return {label:'OK', cls:'ok'}; if(days<=14) return {label:'Atenção', cls:'warn'}; if(days<=21) return {label:'Atenção grave', cls:'grave'}; return {label:'Plano de ação', cls:'action'}; }
+    function formatDate(d){ return d ? d.toLocaleDateString('pt-BR') : '-'; }
+    function humanDays(days){ if(days > 365) return `${days} dias (${(days/365).toFixed(1)} anos)`; if(days > 31) return `${days} dias (${(days/30).toFixed(1)} meses)`; return `${days} dias`; }
 
-  const fCliente=el.filtroCliente.value.trim().toLowerCase();
-  const fContrato=el.filtroContrato.value.trim().toLowerCase();
-  const fMes=el.filtroMes.value;
-  const fStatus=el.filtroStatus.value;
+    function aggregate(list){
+      const m = new Map();
+      for(const r of list){
+        const key = r.cnpj || `sem-cnpj:${(r.cliente||'').toLowerCase()}`;
+        if(!m.has(key)) m.set(key, { cnpj:r.cnpj, cliente:r.cliente || '-', contratos:new Set(), obras:new Set(), materiais:new Set(), volume:0, dataRemessa:null });
+        const row = m.get(key);
+        if(r.contrato) row.contratos.add(r.contrato);
+        if(r.obra) row.obras.add(r.obra);
+        if(r.material) row.materiais.add(r.material);
+        row.volume += r.volume || 0;
+        if(r.dataRemessa && (!row.dataRemessa || r.dataRemessa > row.dataRemessa)) row.dataRemessa = r.dataRemessa;
+      }
+      return [...m.values()].map(item=>{
+        const days = item.dataRemessa ? Math.max(0, Math.floor((Date.now() - item.dataRemessa) / 86400000)) : 9999;
+        const st = statusByDays(days);
+        return { ...item, days, status:st.label, statusClass:st.cls, ano:item.dataRemessa ? String(item.dataRemessa.getFullYear()) : '', mes:item.dataRemessa ? String(item.dataRemessa.getMonth()+1).padStart(2,'0') : '' };
+      }).sort((a,b)=>b.days-a.days);
+    }
 
-  const filtered=aggregated.filter(r=>{
-    const hitCliente=!fCliente || r.cliente.toLowerCase().includes(fCliente) || r.cnpj.includes(fCliente.replace(/\D/g,''));
-    const hitContrato=!fContrato || r.contratos.join(' | ').toLowerCase().includes(fContrato);
-    const hitMes=!fMes || r.mes===fMes;
-    const hitStatus=!fStatus || r.status===fStatus;
-    return hitCliente && hitContrato && hitMes && hitStatus;
-  });
+    async function importFile(){
+      const file = el.fileInput.files[0];
+      if(!file){ alert('Selecione um arquivo.'); return; }
+      el.fileInfo.textContent = file.name;
+      try{
+        let raw = [];
+        if(/\.csv$/i.test(file.name)){
+          const text = decodeCsvWithFallback(await file.arrayBuffer());
+          const wb = XLSX.read(text, { type:'string', raw:false, codepage:65001 });
+          raw = XLSX.utils.sheet_to_json(chooseSheet(wb), { defval:'' });
+        } else {
+          const wb = XLSX.read(await file.arrayBuffer(), { type:'array', raw:false, cellDates:true });
+          raw = XLSX.utils.sheet_to_json(chooseSheet(wb), { defval:'' });
+        }
+        rows = normalize(raw);
+        const noise = (JSON.stringify(rows).match(/�/g) || []).length;
+        if(noise > 10){ el.importMessage.textContent = 'Aviso: arquivo aparenta codificação inválida. Salve em UTF-8 ou XLSX.'; }
+        localStorage.setItem('dataRows', JSON.stringify(rows));
+        page = 1;
+        render();
+        el.importMessage.textContent = `Arquivo carregado com sucesso: ${rows.length} registro(s).`;
+      }catch(e){
+        console.error(e);
+        el.importMessage.textContent = 'Erro ao importar arquivo. Verifique se o formato está correto.';
+      }
+    }
 
-  const counters={ok:0,warn:0,grave:0,action:0};
-  filtered.forEach(r=>counters[r.statusClass]++);
-  el.ok.innerText=counters.ok; el.warn.innerText=counters.warn; el.grave.innerText=counters.grave; el.action.innerText=counters.action;
+    async function carregarDemo(){
+      const resp = await fetch(`data/demo.json?v=${BUILD}`);
+      const data = await resp.json();
+      rows = normalize(data);
+      localStorage.setItem('dataRows', JSON.stringify(rows));
+      page = 1;
+      render();
+      el.importMessage.textContent = 'Demo carregada com sucesso.';
+    }
 
-  el.registrosInfo.innerText=`Registros exibidos: ${filtered.length} • Clientes únicos: ${filtered.length}`;
+    function clearData(){ if(!confirm('Excluir todos os dados?')) return; rows = []; localStorage.removeItem('dataRows'); page = 1; render(); el.importMessage.textContent = ''; }
+    function fillFilters(list){
+      const years = [...new Set(list.map(i=>i.ano).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
+      const months = [...new Set(list.map(i=>i.mes).filter(Boolean))].sort();
+      const y = el.anoFiltro.value, m = el.mesFiltro.value;
+      el.anoFiltro.innerHTML = '<option value="">Ano: todos</option>' + years.map(v=>`<option value="${v}">${v}</option>`).join('');
+      el.mesFiltro.innerHTML = '<option value="">Mês: todos</option>' + months.map(v=>`<option value="${v}">${v}</option>`).join('');
+      el.anoFiltro.value = years.includes(y) ? y : '';
+      el.mesFiltro.value = months.includes(m) ? m : '';
+    }
 
-  el.tbody.innerHTML="";
-  if(!filtered.length){
-    el.tbody.innerHTML='<tr><td colspan="9">Nenhum registro encontrado para os filtros atuais.</td></tr>';
-    return;
-  }
+    function render(){
+      const base = aggregate(rows);
+      fillFilters(base);
+      rendered = base.filter(r => (!el.anoFiltro.value || r.ano === el.anoFiltro.value) && (!el.mesFiltro.value || r.mes === el.mesFiltro.value));
 
-  filtered.forEach(r=>{
-    el.tbody.innerHTML+=`<tr>
-      <td>${r.cnpj||"-"}</td>
-      <td>${r.cliente}</td>
-      <td>${r.contratos.length?r.contratos.join(" | "):"-"}</td>
-      <td>${formatDate(r.dataRemessa)}</td>
-      <td>${ritmo(r.dias)}</td>
-      <td>${r.dias}</td>
-      <td>${r.volumeObra}</td>
-      <td>${r.nomeObra}</td>
-      <td><span class="badge ${r.statusClass}">${r.status}</span></td>
-    </tr>`;
-  });
-}
+      const counters = { ok:0, warn:0, grave:0, action:0 };
+      let volume = 0; let contratos = 0;
+      rendered.forEach(r=>{ counters[r.statusClass]++; volume += r.volume; contratos += r.contratos.size; });
+      el.ok.textContent = counters.ok; el.warn.textContent = counters.warn; el.grave.textContent = counters.grave; el.action.textContent = counters.action;
+      el.totalClientes.textContent = String(rendered.length);
+      el.totalContratos.textContent = String(contratos);
+      el.totalVolume.textContent = String(Math.round(volume * 100) / 100);
 
-function bootstrap(){
-  loadUsers();
-  const u=localStorage.getItem("user");
-  if(!u || !users[u]){openLogin();return;}
-  openApp();
-  el.perfil.innerText=`Perfil: ${users[u].role}`;
-  el.adminOnly.forEach(c=>c.classList.toggle("hidden", users[u].role!=="Administrador"));
-  rows=safeParseObj("dataRows",[]);
-  if(!Array.isArray(rows)) rows=[];
-  render();
-}
+      const totalPages = Math.max(1, Math.ceil(rendered.length / PAGE_SIZE));
+      if(page > totalPages) page = totalPages;
+      const start = (page - 1) * PAGE_SIZE;
+      const view = rendered.slice(start, start + PAGE_SIZE);
+      el.pageInfo.textContent = `Mostrando ${view.length} de ${rendered.length} registros • Página ${page}/${totalPages}`;
 
-document.addEventListener("DOMContentLoaded",()=>{openLogin();bootstrap();});
-</script>
+      document.querySelectorAll('.material-col').forEach(c=>c.classList.toggle('hidden', !el.showMaterial.checked));
+      el.tbody.innerHTML = view.length ? '' : `<tr><td colspan="8">Sem dados para os filtros selecionados.</td></tr>`;
+      for(const r of view){
+        el.tbody.innerHTML += `<tr>
+          <td>${r.cnpj || '-'} ${r.cliente ? `<br><span class="hint">${r.cliente}</span>` : ''}</td>
+          <td>${r.contratos.size ? [...r.contratos].join(' | ') : '-'}</td>
+          <td>${r.obras.size ? [...r.obras].join(' | ') : '-'}</td>
+          <td>${(Math.round(r.volume * 100) / 100).toString().replace('.', ',')}</td>
+          <td>${formatDate(r.dataRemessa)}</td>
+          <td>${humanDays(r.days)}</td>
+          <td><span class="badge ${r.statusClass}">${r.status}</span></td>
+          <td class="material-col ${el.showMaterial.checked ? '' : 'hidden'}">${r.materiais.size ? [...r.materiais].join(' | ') : '-'}</td>
+        </tr>`;
+      }
+      drawChart();
+    }
+
+    function drawChart(){
+      const c = el.chartCanvas; const ctx = c.getContext('2d');
+      const width = c.clientWidth, height = c.clientHeight;
+      c.width = width * devicePixelRatio; c.height = height * devicePixelRatio; ctx.scale(devicePixelRatio, devicePixelRatio);
+      ctx.clearRect(0,0,width,height);
+      const series = {};
+      rendered.forEach(r=>{ const key = r.ano && r.mes ? `${r.ano}-${r.mes}` : 'Sem data'; series[key] = (series[key] || 0) + 1; });
+      const labels = Object.keys(series).sort();
+      if(!labels.length){ ctx.fillStyle = '#aab7db'; ctx.fillText('Sem dados para o gráfico.', 16, 24); return; }
+      const max = Math.max(...Object.values(series));
+      const barW = Math.max(30, (width - 50) / labels.length - 10);
+      labels.forEach((lb, i)=>{
+        const x = 28 + i * (barW + 10); const h = ((height - 70) * series[lb]) / max; const y = height - 40 - h;
+        ctx.fillStyle = '#ff5b76'; ctx.fillRect(x, y, barW, h);
+        ctx.fillStyle = '#aab7db'; ctx.fillText(lb, x, height - 14);
+      });
+    }
+
+    function prevPage(){ if(page > 1){ page--; render(); } }
+    function nextPage(){ if(page < Math.max(1, Math.ceil(rendered.length / PAGE_SIZE))){ page++; render(); } }
+
+    function bootstrap(){
+      loadUsers();
+      const u = localStorage.getItem('user');
+      if(!u || !users[u]){ el.loginScreen.classList.remove('hidden'); el.app.classList.add('hidden'); return; }
+      rows = safeParse('dataRows', []); if(!Array.isArray(rows)) rows = [];
+      el.loginScreen.classList.add('hidden'); el.app.classList.remove('hidden');
+      document.getElementById('buildInfo').textContent = `Build ${BUILD}`;
+      render();
+    }
+
+    document.addEventListener('DOMContentLoaded', ()=>{
+      el.fileInput.addEventListener('change', ()=>{ el.fileInfo.textContent = el.fileInput.files[0]?.name || 'Nenhum arquivo selecionado'; });
+      bootstrap();
+    });
+  </script>
 </body>
 </html>
