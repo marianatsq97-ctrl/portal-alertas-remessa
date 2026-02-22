@@ -1,12 +1,14 @@
-const STORAGE_KEY = "portal-remessas.v2";
+const STORAGE_KEY = "portal-remessas.v3";
 
 const fileInput = document.getElementById("fileInput");
 const btnImport = document.getElementById("btnImport");
 const btnLoadDemo = document.getElementById("btnLoadDemo");
 const btnClear = document.getElementById("btnClear");
+const btnUpdateChart = document.getElementById("btnUpdateChart");
 const filterYear = document.getElementById("filterYear");
 const filterMonth = document.getElementById("filterMonth");
 const toggleMaterial = document.getElementById("toggleMaterial");
+const importInfo = document.getElementById("importInfo");
 
 const okCount = document.getElementById("okCount");
 const warnCount = document.getElementById("warnCount");
@@ -36,14 +38,39 @@ function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
 }
 
+function excelDateToJS(value) {
+  if (typeof value !== "number") return null;
+  const utcDays = Math.floor(value - 25569);
+  const utcValue = utcDays * 86400;
+  const dateInfo = new Date(utcValue * 1000);
+  return new Date(dateInfo.getFullYear(), dateInfo.getMonth(), dateInfo.getDate());
+}
+
+function parseDate(value) {
+  if (!value && value !== 0) return null;
+  if (value instanceof Date) return value;
+
+  const excelDate = excelDateToJS(value);
+  if (excelDate) return excelDate;
+
+  const s = String(value).trim();
+  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (br) return new Date(Number(br[3]), Number(br[2]) - 1, Number(br[1]));
+
+  const iso = new Date(s);
+  return Number.isNaN(iso.getTime()) ? null : iso;
+}
+
 function normalizeRow(row) {
-  const cnpj = String(row.CNPJ || row.cnpj || "").trim();
+  const cnpj = String(row.CNPJ || row.cnpj || row["CNPJ CLIENTE"] || "").trim();
   const cliente = String(row.Cliente || row.CLIENTE || row.cliente || "").trim();
   const contrato = String(row.Contrato || row.CONTRATO || row.contrato || "Sem contrato").trim();
   const material = String(row.Material || row.MATERIAL || row.material || "").trim();
-  const dataRemessa = parseDate(row["Data da remessa"] || row["DATA DA REMESSA"] || row.dataRemessa || row.data || "");
-  const volume = Number(row["Volume da obra"] || row.volume_obra || row.Volume || row.Quantidade || 0) || 0;
-  const obra = String(row["Nome da obra"] || row.nome_obra || row.Obra || "").trim();
+  const dataRemessa = parseDate(
+    row["Data da remessa"] || row["DATA DA REMESSA"] || row.dataRemessa || row.data || row["Ultima Remessa"] || row["Última remessa"] || ""
+  );
+  const volume = Number(row["Volume da obra"] || row.volume_obra || row.Volume || row.Quantidade || row["Volume Obra"] || 0) || 0;
+  const obra = String(row["Nome da obra"] || row.nome_obra || row.Obra || row["Nome Obra"] || "").trim();
 
   return {
     cnpj,
@@ -55,16 +82,6 @@ function normalizeRow(row) {
     volume,
     obra,
   };
-}
-
-function parseDate(value) {
-  if (!value) return null;
-  if (value instanceof Date) return value;
-  const s = String(value).trim();
-  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (br) return new Date(Number(br[3]), Number(br[2]) - 1, Number(br[1]));
-  const iso = new Date(s);
-  return Number.isNaN(iso.getTime()) ? null : iso;
 }
 
 function daysWithout(date) {
@@ -81,14 +98,8 @@ function statusByDays(days) {
 }
 
 function prettyAge(days) {
-  if (days > 365) {
-    const years = (days / 365).toFixed(1);
-    return `${days} dias (${years} anos)`;
-  }
-  if (days > 31) {
-    const months = (days / 30).toFixed(1);
-    return `${days} dias (${months} meses)`;
-  }
+  if (days > 365) return `${days} dias (${(days / 365).toFixed(1)} anos)`;
+  if (days > 31) return `${days} dias (${(days / 30).toFixed(1)} meses)`;
   return `${days} dias`;
 }
 
@@ -127,8 +138,8 @@ function aggregate(rows) {
 
 function initFilters(items) {
   const years = [...new Set(items.map((i) => (i.lastDate ? i.lastDate.getFullYear() : null)).filter(Boolean))].sort((a, b) => b - a);
-
   filterYear.innerHTML = '<option value="all">Todos</option>' + years.map((y) => `<option value="${y}">${y}</option>`).join("");
+
   const months = ["Todos", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   filterMonth.innerHTML = months.map((m, i) => `<option value="${i - 1}">${m}</option>`).join("");
 }
@@ -139,9 +150,7 @@ function filtered(items) {
 
   return items.filter((item) => {
     if (!item.lastDate) return y === "all" && m === -1;
-    const okYear = y === "all" || item.lastDate.getFullYear() === Number(y);
-    const okMonth = m === -1 || item.lastDate.getMonth() === m;
-    return okYear && okMonth;
+    return (y === "all" || item.lastDate.getFullYear() === Number(y)) && (m === -1 || item.lastDate.getMonth() === m);
   });
 }
 
@@ -161,25 +170,25 @@ function renderSummary(items) {
 
 function renderTable(items) {
   thMaterial.style.display = showMaterial ? "table-cell" : "none";
-  tbody.innerHTML = "";
-
   const sorted = [...items].sort((a, b) => b.days - a.days);
 
-  sorted.forEach((item) => {
-    const tr = document.createElement("tr");
-    const displayClient = item.cnpj ? `${item.cnpj} • ${item.cliente || "Sem nome"}` : item.cliente || "Sem nome";
-    tr.innerHTML = `
-      <td>${displayClient}</td>
-      <td>${item.contrato}</td>
-      <td>${item.obra || "-"}</td>
-      <td>${item.volume.toLocaleString("pt-BR")}</td>
-      <td>${item.lastDate ? item.lastDate.toLocaleDateString("pt-BR") : "Sem data"}</td>
-      <td>${prettyAge(item.days)}</td>
-      <td><span class="badge ${item.status.key}">${item.status.label}</span></td>
-      ${showMaterial ? `<td>${item.materials.join(", ") || "-"}</td>` : ""}
-    `;
-    tbody.appendChild(tr);
-  });
+  tbody.innerHTML = sorted
+    .map((item) => {
+      const displayClient = item.cnpj ? `${item.cnpj} • ${item.cliente || "Sem nome"}` : item.cliente || "Sem nome";
+      return `
+        <tr>
+          <td>${displayClient}</td>
+          <td>${item.contrato}</td>
+          <td>${item.obra || "-"}</td>
+          <td>${item.volume.toLocaleString("pt-BR")}</td>
+          <td>${item.lastDate ? item.lastDate.toLocaleDateString("pt-BR") : "Sem data"}</td>
+          <td>${prettyAge(item.days)}</td>
+          <td><span class="badge ${item.status.key}">${item.status.label}</span></td>
+          ${showMaterial ? `<td>${item.materials.join(", ") || "-"}</td>` : ""}
+        </tr>
+      `;
+    })
+    .join("");
 }
 
 function monthSeries(rows) {
@@ -190,6 +199,7 @@ function monthSeries(rows) {
     if (!agg[key]) agg[key] = { ok: 0, warn: 0, grave: 0, action: 0 };
     agg[key][statusByDays(daysWithout(r.dataRemessa)).key] += 1;
   });
+
   return Object.entries(agg)
     .sort(([a], [b]) => (a > b ? 1 : -1))
     .map(([label, data]) => ({ label, ...data }));
@@ -210,17 +220,13 @@ function drawChart(rows) {
   }
 
   const max = Math.max(...series.map((s) => s.ok + s.warn + s.grave + s.action), 1);
-  const barW = Math.max(36, (w - 80) / series.length - 12);
+  const slot = (w - 80) / series.length;
+  const barW = Math.max(32, slot - 12);
 
   series.forEach((s, idx) => {
-    const x = 50 + idx * ((w - 80) / series.length);
+    const x = 50 + idx * slot;
     let y = h - 40;
-    [
-      ["ok", "#39d98a"],
-      ["warn", "#ffd84d"],
-      ["grave", "#ff9f43"],
-      ["action", "#ff5b6e"],
-    ].forEach(([k, color]) => {
+    [["ok", "#39d98a"], ["warn", "#ffd84d"], ["grave", "#ff9f43"], ["action", "#ff5b6e"]].forEach(([k, color]) => {
       const value = s[k];
       if (!value) return;
       const bh = ((h - 90) * value) / max;
@@ -228,10 +234,19 @@ function drawChart(rows) {
       ctx.fillStyle = color;
       ctx.fillRect(x, y, barW, bh);
     });
-
     ctx.fillStyle = "#a6b0d6";
     ctx.font = "12px sans-serif";
     ctx.fillText(s.label, x, h - 16);
+  });
+}
+
+function getRawByCurrentFilters() {
+  return raw.filter((r) => {
+    const d = parseDate(r["Data da remessa"] || r["DATA DA REMESSA"] || r.dataRemessa || r.data || r["Ultima Remessa"] || r["Última remessa"] || "");
+    if (!d) return false;
+    const y = filterYear.value;
+    const m = Number(filterMonth.value);
+    return (y === "all" || d.getFullYear() === Number(y)) && (m === -1 || d.getMonth() === m);
   });
 }
 
@@ -239,18 +254,9 @@ function refresh() {
   const items = aggregate(raw);
   if (!filterYear.options.length) initFilters(items);
   const view = filtered(items);
-
   renderSummary(view);
   renderTable(view);
-  drawChart(raw.filter((r) => {
-    const d = parseDate(r["Data da remessa"] || r["DATA DA REMESSA"] || r.dataRemessa || r.data || "");
-    if (!d) return false;
-    const y = filterYear.value;
-    const m = Number(filterMonth.value);
-    const okYear = y === "all" || d.getFullYear() === Number(y);
-    const okMonth = m === -1 || d.getMonth() === m;
-    return okYear && okMonth;
-  }));
+  drawChart(getRawByCurrentFilters());
 }
 
 function parseCSV(text) {
@@ -265,34 +271,65 @@ function parseCSV(text) {
   });
 }
 
+async function parseSpreadsheet(file) {
+  const ext = file.name.toLowerCase().split(".").pop();
+
+  if (ext === "csv") {
+    return parseCSV(await file.text());
+  }
+
+  if (ext === "json") {
+    return JSON.parse(await file.text());
+  }
+
+  if (ext === "xlsx" || ext === "xls") {
+    if (!window.XLSX) throw new Error("Biblioteca XLSX não carregada.");
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: "array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(ws, { defval: "" });
+  }
+
+  throw new Error("Formato não suportado.");
+}
+
 btnLoadDemo.addEventListener("click", async () => {
   const res = await fetch("data/demo.json");
   raw = await res.json();
   save();
   filterYear.innerHTML = "";
+  importInfo.textContent = "Demo carregada com sucesso.";
   refresh();
 });
 
 btnImport.addEventListener("click", async () => {
   const file = fileInput.files[0];
-  if (!file) return alert("Selecione um arquivo .csv ou .json.");
+  if (!file) return alert("Selecione um arquivo CSV, JSON ou XLSX.");
 
-  const text = await file.text();
-  raw = file.name.toLowerCase().endsWith(".json") ? JSON.parse(text) : parseCSV(text);
-  save();
-  filterYear.innerHTML = "";
-  refresh();
+  try {
+    raw = await parseSpreadsheet(file);
+    save();
+    filterYear.innerHTML = "";
+    importInfo.textContent = `Arquivo carregado: ${file.name} (${raw.length} linhas)`;
+    refresh();
+  } catch (error) {
+    importInfo.textContent = "Falha ao importar. Verifique o formato e os cabeçalhos.";
+    alert("Não foi possível importar o arquivo.");
+  }
 });
 
 btnClear.addEventListener("click", () => {
   raw = [];
   save();
   filterYear.innerHTML = "";
+  importInfo.textContent = "Dados excluídos.";
   refresh();
 });
 
 filterYear.addEventListener("change", refresh);
 filterMonth.addEventListener("change", refresh);
+btnUpdateChart.addEventListener("click", refresh);
+
 toggleMaterial.addEventListener("change", (e) => {
   showMaterial = e.target.checked;
   refresh();

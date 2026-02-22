@@ -1,24 +1,19 @@
 # Portal de Alertas – Remessas
 
-Aplicativo web para acompanhar clientes/contratos sem remessa e agir com prioridade.
+Sistema em layout dashboard para monitorar clientes sem remessa.
 
-## Melhorias implementadas
-- Novas faixas de alerta:
-  - **OK**: 0 a 7 dias;
-  - **Atenção**: 8 a 14 dias;
-  - **Atenção grave**: 15 a 21 dias;
-  - **Plano de ação**: acima de 21 dias.
-- Exibição em **dias/meses/anos** quando ultrapassa 31 e 365 dias.
-- Ordenação por ritmo da última remessa (maior tempo sem remessa primeiro).
-- Chave de vínculo por **CNPJ + contrato**, agregando produtos.
-- Inclusão de **nome da obra** e **volume da obra** no detalhamento.
-- Opção para ocultar/mostrar coluna de materiais/produtos.
-- Filtro de ano/mês que atualiza automaticamente cards, tabela e gráfico.
-- Logo Areia Ana exibida no cabeçalho.
+## Ajustes desta versão
+- Mantido o layout do portal e removidos elementos extras que estavam poluindo o topo.
+- Corrigida importação de arquivo para aceitar: **CSV, JSON, XLSX e XLS**.
+- Correção principal para seu problema: arquivo Excel agora é lido como planilha (binário), evitando texto corrompido no detalhamento.
+- Filtros de ano/mês continuam atualizando resumo, tabela e gráfico.
+- Regras de alerta:
+  - OK: 0 a 7 dias
+  - Atenção: 8 a 14 dias
+  - Atenção grave: 15 a 21 dias
+  - Plano de ação: acima de 21 dias
 
 ## Como usar
-1. Abra `index.html`.
-2. Clique em **Carregar demo** para testar ou importe um arquivo `.csv`/`.json`.
-3. Use filtros de ano e mês para analisar períodos.
-
-> Compatível com GitHub Pages (site estático).
+1. Clique em **Selecionar arquivo** e escolha seu `.xlsx`.
+2. Clique em **Carregar arquivo**.
+3. Se necessário, marque **Mostrar materiais/produtos** para ver a coluna extra.

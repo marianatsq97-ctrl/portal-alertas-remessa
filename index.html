@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal de Alertas – Remessas</title>
     <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body>
     <div class="page">
@@ -13,26 +14,22 @@
           <img src="logo-areia-ana.png" alt="Logo Areia Ana" />
           <div>
             <h1>Portal de Alertas – Remessas</h1>
-            <p>Priorize clientes sem remessa e aja no tempo certo.</p>
+            <p>Controle de clientes sem remessa.</p>
           </div>
         </div>
       </header>
 
-      <section class="panel">
-        <details>
-          <summary>Importar / atualizar dados</summary>
-          <div class="import-grid">
-            <label>
-              Arquivo CSV ou JSON
-              <input id="fileInput" type="file" accept=".csv,.json" />
-            </label>
-            <div class="actions">
-              <button id="btnImport" class="btn btn-primary">Carregar arquivo</button>
-              <button id="btnLoadDemo" class="btn">Carregar demo</button>
-              <button id="btnClear" class="btn btn-danger">Excluir dados</button>
-            </div>
-          </div>
-        </details>
+      <section class="panel compact-panel">
+        <div class="actions">
+          <label class="file-btn">
+            Selecionar arquivo
+            <input id="fileInput" type="file" accept=".csv,.json,.xlsx,.xls" />
+          </label>
+          <button id="btnImport" class="btn btn-primary">Carregar arquivo</button>
+          <button id="btnLoadDemo" class="btn">Carregar demo</button>
+          <button id="btnClear" class="btn btn-danger">Excluir dados</button>
+        </div>
+        <small id="importInfo" class="muted">Formatos aceitos: CSV, JSON, XLSX e XLS.</small>
 
         <div class="filters">
           <label>
@@ -44,35 +41,38 @@
             <select id="filterMonth"></select>
           </label>
           <label class="checkbox">
-            <input id="toggleMaterial" type="checkbox" /> Mostrar material/produtos no detalhamento
+            <input id="toggleMaterial" type="checkbox" /> Mostrar materiais/produtos
           </label>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Resumo Geral</h2>
+        <h2>Resumo</h2>
         <div class="kpis">
           <article class="kpi"><span id="kpiContratos">0</span><small>Contratos exibidos</small></article>
-          <article class="kpi"><span id="kpiClientes">0</span><small>Clientes únicos (chave CNPJ)</small></article>
+          <article class="kpi"><span id="kpiClientes">0</span><small>Clientes únicos (CNPJ)</small></article>
           <article class="kpi"><span id="kpiVolume">0</span><small>Volume total da obra</small></article>
         </div>
 
         <div class="cards">
-          <article class="status ok"><h3>OK</h3><strong id="okCount">0</strong><small>0 a 7 dias</small></article>
-          <article class="status warn"><h3>Atenção</h3><strong id="warnCount">0</strong><small>8 a 14 dias</small></article>
-          <article class="status grave"><h3>Atenção grave</h3><strong id="graveCount">0</strong><small>15 a 21 dias</small></article>
-          <article class="status action"><h3>Plano de ação</h3><strong id="actionCount">0</strong><small>> 21 dias</small></article>
+          <article class="status ok"><h3>OK</h3><strong id="okCount">0</strong><small>0 a 7 dias sem remessa</small></article>
+          <article class="status warn"><h3>Atenção</h3><strong id="warnCount">0</strong><small>8 a 14 dias sem remessa</small></article>
+          <article class="status grave"><h3>Atenção grave</h3><strong id="graveCount">0</strong><small>15 a 21 dias sem remessa</small></article>
+          <article class="status action"><h3>Plano de ação</h3><strong id="actionCount">0</strong><small>> 21 dias sem remessa</small></article>
         </div>
       </section>
 
       <section class="panel">
-        <h2>Evolução por mês</h2>
+        <div class="panel-head">
+          <h2>Evolução de remessas</h2>
+          <button id="btnUpdateChart" class="btn">Atualizar gráfico</button>
+        </div>
         <canvas id="chart" width="1200" height="340"></canvas>
       </section>
 
       <section class="panel">
-        <h2>Importação e Detalhamento</h2>
-        <p class="muted">Ordenado pelo ritmo da última remessa (maior dias sem remessa primeiro).</p>
+        <h2>Detalhamento</h2>
+        <p class="muted">Ordenado da maior para a menor urgência (dias sem remessa).</p>
         <div class="table-wrap">
           <table>
             <thead>
