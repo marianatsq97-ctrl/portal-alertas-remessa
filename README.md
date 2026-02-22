@@ -12,6 +12,39 @@ Sistema visual para monitorar clientes sem remessa.
 - Este portal deve permanecer publicado neste repositório: `marianatsq97-ctrl/portal-alertas-remessa`.
 - URL oficial do GitHub Pages: `https://marianatsq97-ctrl.github.io/portal-alertas-remessa/`.
 - Em **Settings → Pages**, mantenha a publicação pela branch principal deste mesmo repositório.
+## Erro comum ao copiar comandos no PowerShell (seu caso no print)
+No seu log, vários comandos foram colados **na mesma linha**, por isso o PowerShell interpretou tudo junto:
+- `Get-ChildItem -Forcecd ...` (virou parâmetro inválido `Forcecd`)
+- `cd "..."git status` (o `git` foi interpretado como parte do `cd`)
+- `git branch -agit checkout -b work` (o `git branch` leu `-g` como opção inválida)
+
+### Regra de ouro
+Execute **um comando por vez** e pressione **Enter** após cada linha.
+
+Exemplo correto:
+```powershell
+cd "C:\SISTEMAS MARIANA\portal-alertas-remessa"
+git status
+git branch -a
+git checkout work
+git pull origin work
+```
+
+### Como limpar o estado se você colou comandos errados
+Se aparecer no `git status` algo como `deleted: work` e também uma pasta `portal-alertas-remessa/` não rastreada, rode dentro do repositório:
+```powershell
+git restore --staged work 2>$null
+git restore work 2>$null
+Remove-Item -Recurse -Force .\portal-alertas-remessa\
+git status
+```
+
+Se o `git status` voltar para "working tree clean", continue normalmente:
+```powershell
+git checkout work
+git pull origin work
+```
+
 
 ## Erro comum no Windows: `fatal: not a git repository`
 Se você estiver vendo esse erro no PowerShell, normalmente está executando comandos Git na pasta errada.
