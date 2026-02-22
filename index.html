@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Portal de Alertas – Remessas</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -19,7 +18,6 @@
 }
 
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:system-ui,Segoe UI,Roboto;
@@ -27,149 +25,68 @@ body{
   color:var(--text);
 }
 
-/* LOGIN */
-#login{
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
-
+#login{min-height:100vh;display:flex;justify-content:center;align-items:center}
 .login-card{
-  width:420px;
-  background:linear-gradient(180deg,#0d1224,#070b16);
-  border-radius:20px;
-  padding:32px;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
-  text-align:center;
+  width:420px;background:linear-gradient(180deg,#0d1224,#070b16);border-radius:20px;
+  padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.6);text-align:center;
 }
-
-.login-card img{
-  width:140px;
-  margin-bottom:16px;
-  filter:brightness(1.2);
-}
-
+.login-card img{width:140px;margin-bottom:16px;filter:brightness(1.2)}
 .login-card h1{margin:0}
 .login-card p{opacity:.8}
-
-.login-card input{
-  width:100%;
-  padding:14px;
-  margin-top:12px;
-  border-radius:12px;
-  border:none;
-  background:#0b1020;
-  color:white;
+.login-card input, .form-grid input{
+  width:100%;padding:12px;margin-top:10px;border-radius:12px;border:none;background:#0b1020;color:white;
 }
-
-.login-card button{
-  margin-top:18px;
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  background:var(--accent);
-  font-weight:700;
-  cursor:pointer;
+.login-card button, button.small{
+  margin-top:16px;padding:10px 14px;border:none;border-radius:10px;background:var(--accent);font-weight:700;cursor:pointer;
 }
+button.small{margin-top:0;background:#121a33;color:white}
 
-/* APP */
 #app{display:none;padding:24px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+header .left{display:flex;align-items:center;gap:16px}
+header img{width:56px;filter:brightness(1.1)}
+.card{background:linear-gradient(180deg,#0c1226,#070b16);border-radius:20px;padding:20px;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat{border-left:6px solid}.stat.ok{border-color:var(--ok)}.stat.warn{border-color:var(--warn)}
+.stat.grave{border-color:var(--grave)}.stat.action{border-color:var(--action)}
+.stat h2{margin:0;font-size:18px}.stat span{font-size:32px;font-weight:700}
 
-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:24px;
-}
-
-header .left{
-  display:flex;
-  align-items:center;
-  gap:16px;
-}
-
-header img{
-  width:56px;
-  filter:brightness(1.1);
-}
-
-.card{
-  background:linear-gradient(180deg,#0c1226,#070b16);
-  border-radius:20px;
-  padding:20px;
-  margin-bottom:20px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;
-}
-
-.stat{
-  border-left:6px solid;
-}
-
-.stat.ok{border-color:var(--ok)}
-.stat.warn{border-color:var(--warn)}
-.stat.grave{border-color:var(--grave)}
-.stat.action{border-color:var(--action)}
-
-.stat h2{margin:0;font-size:18px}
-.stat span{font-size:32px;font-weight:700}
-
-button.small{
-  padding:8px 14px;
-  border-radius:10px;
-  border:none;
-  background:#121a33;
-  color:white;
-  cursor:pointer;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th{
-  background:var(--accent);
-  padding:10px;
-  text-align:left;
-}
-
-td{
-  padding:8px;
-  border-bottom:1px solid #1c2544;
-}
-
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th{background:var(--accent);padding:10px;text-align:left;color:#050814}
+td{padding:8px;border-bottom:1px solid #1c2544}
 .admin-only{display:none}
+.form-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:10px;align-items:end}
+.form-grid .full{grid-column:span 2}
+.tag{padding:4px 8px;border-radius:999px;font-size:12px;font-weight:600;display:inline-block}
+.tag.emitida{background:#2ecc7128;color:#9ef8c0}
+.tag.pendente{background:#f1c40f2b;color:#ffe78d}
+.tag.cancelada{background:#e74c3c2d;color:#ffb1a8}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+
+@media (max-width:960px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:repeat(2,minmax(130px,1fr))}
+}
 </style>
 </head>
 
 <body>
-
-<!-- LOGIN -->
 <div id="login">
   <div class="login-card">
-    <img src="logo-areia-ana.png">
+    <img src="logo-areia-ana.png" alt="Logo">
     <h1>Portal de Alertas</h1>
     <p>Remessas • Contratos • Status automático</p>
-
     <input id="user" placeholder="Usuário">
     <input id="pass" type="password" placeholder="Senha">
     <button onclick="login()">Entrar</button>
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
-
 <header>
   <div class="left">
-    <img src="logo-areia-ana.png">
+    <img src="logo-areia-ana.png" alt="Logo">
     <h2>Portal de Alertas – Remessas</h2>
   </div>
   <div>
@@ -186,37 +103,50 @@ td{
 </div>
 
 <div class="card admin-only">
-  <h3>Administração</h3>
+  <h3>Administração de remessas</h3>
   <input type="file" id="file">
   <button class="small" onclick="importCSV()">Importar</button>
   <button class="small" onclick="clearData()">Excluir Dados</button>
 </div>
 
 <div class="card">
+  <h3>Operação (MVP pedido → nota)</h3>
+  <div class="form-grid">
+    <input id="pedidoCliente" placeholder="Cliente" class="full">
+    <input id="pedidoMaterial" placeholder="Material">
+    <input id="pedidoQtd" type="number" min="1" value="1" placeholder="Qtd">
+    <input id="pedidoDestino" placeholder="Destino" class="full">
+    <input id="pedidoData" type="date">
+    <button class="small" onclick="criarPedido()">Criar pedido</button>
+  </div>
+  <div class="table-wrap" style="margin-top:14px">
+    <table>
+      <thead>
+        <tr>
+          <th>Pedido</th><th>Cliente</th><th>Material</th><th>Qtd</th><th>Destino</th><th>Status</th><th>Nota</th><th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="pedidosBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card table-wrap">
   <h3>Detalhamento</h3>
   <table>
     <thead>
-      <tr>
-        <th>Cliente</th>
-        <th>Contrato</th>
-        <th>Última Remessa</th>
-        <th>Dias</th>
-        <th>Status</th>
-      </tr>
+      <tr><th>Cliente</th><th>Contrato</th><th>Última Remessa</th><th>Dias</th><th>Status</th></tr>
     </thead>
     <tbody id="tbody"></tbody>
   </table>
 </div>
-
 </div>
 
 <script>
-const users={
-  admin:{pass:"1234",role:"Administrador"},
-  usuario:{pass:"1234",role:"Usuário"}
-};
+const users={admin:{pass:"1234",role:"Administrador"},usuario:{pass:"1234",role:"Usuário"}};
 
 let data=[];
+let pedidos=[];
 
 const elements={
   login:document.getElementById("login"),
@@ -227,8 +157,14 @@ const elements={
   grave:document.getElementById("grave"),
   action:document.getElementById("action"),
   tbody:document.getElementById("tbody"),
+  pedidosBody:document.getElementById("pedidosBody"),
   adminOnly:[...document.querySelectorAll(".admin-only")]
 };
+
+function safeParse(key){
+  try{return JSON.parse(localStorage.getItem(key)||"[]");}
+  catch(_){localStorage.removeItem(key);return [];}
+}
 
 function showLogin(){
   elements.login.style.display="flex";
@@ -241,38 +177,32 @@ function showApp(){
 }
 
 function login(){
-  const u=document.getElementById("user").value;
+  const u=document.getElementById("user").value.trim();
   const p=document.getElementById("pass").value;
   if(!users[u]||users[u].pass!==p)return alert("Login inválido");
 
   localStorage.setItem("user",u);
-  init();
+  carregarAplicacao();
 }
 
 function logout(){
-  localStorage.clear();
-  location.reload();
+  localStorage.removeItem("user");
+  showLogin();
 }
 
-function init(){
+function carregarAplicacao(){
   const u=localStorage.getItem("user");
-  if(!u||!users[u]){
-    localStorage.removeItem("user");
-    showLogin();
-    return;
-  }
+  if(!u||!users[u]){showLogin();return;}
 
   showApp();
   elements.perfil.innerText="Perfil: "+users[u].role;
+  elements.adminOnly.forEach(e=>e.style.display=users[u].role==="Administrador"?"block":"none");
 
-  if(users[u].role==="Administrador"){
-    elements.adminOnly.forEach(e=>e.style.display="block");
-  }else{
-    elements.adminOnly.forEach(e=>e.style.display="none");
-  }
+  data=safeParse("data");
+  pedidos=safeParse("pedidos");
 
-  data=JSON.parse(localStorage.getItem("data")||"[]");
   render();
+  renderPedidos();
 }
 
 function importCSV(){
@@ -281,16 +211,10 @@ function importCSV(){
 
   const reader=new FileReader();
   reader.onload=e=>{
-    const text=e.target.result;
-    const rows=text.split("\n").slice(1);
-    data=rows.map(r=>{
+    const rows=e.target.result.split("\n").slice(1);
+    data=rows.filter(Boolean).map(r=>{
       const c=r.split(",");
-      return{
-        cliente:c[0]||"",
-        contrato:c[1]||"",
-        data:c[2]||"",
-        dias:parseInt(c[3]||0)
-      };
+      return {cliente:c[0]||"",contrato:c[1]||"",data:c[2]||"",dias:parseInt(c[3]||0)};
     });
     localStorage.setItem("data",JSON.stringify(data));
     render();
@@ -299,38 +223,102 @@ function importCSV(){
 }
 
 function clearData(){
-  if(confirm("Excluir todos os dados?")){
-    localStorage.removeItem("data");
-    data=[];
-    render();
-  }
+  if(!confirm("Excluir todos os dados?"))return;
+  localStorage.removeItem("data");
+  data=[];
+  render();
 }
 
-function status(d){
-  if(d<=7)return["OK","ok"];
-  if(d<=14)return["Atenção","warn"];
-  if(d<=21)return["Atenção Grave","grave"];
-  return["Plano de Ação","action"];
-}
+function status(d){if(d<=7)return["OK","ok"];if(d<=14)return["Atenção","warn"];if(d<=21)return["Atenção Grave","grave"];return["Plano de Ação","action"];}
 
 function render(){
   elements.ok.innerText=elements.warn.innerText=elements.grave.innerText=elements.action.innerText=0;
   elements.tbody.innerHTML="";
+
   data.forEach(r=>{
-    const [s,c]=status(r.dias);
-    document.getElementById(c).innerText++;
-    elements.tbody.innerHTML+=`<tr>
-      <td>${r.cliente}</td>
-      <td>${r.contrato}</td>
-      <td>${r.data}</td>
-      <td>${r.dias}</td>
-      <td>${s}</td>
+    const [s,c]=status(Number(r.dias)||0);
+    document.getElementById(c).innerText=String(Number(document.getElementById(c).innerText)+1);
+    elements.tbody.innerHTML+=`<tr><td>${r.cliente||""}</td><td>${r.contrato||""}</td><td>${r.data||""}</td><td>${Number(r.dias)||0}</td><td>${s}</td></tr>`;
+  });
+}
+
+function uid(prefix){return `${prefix}-${Date.now()}-${Math.floor(Math.random()*90+10)}`;}
+
+function criarPedido(){
+  const cliente=document.getElementById("pedidoCliente").value.trim();
+  const material=document.getElementById("pedidoMaterial").value.trim();
+  const qtd=parseInt(document.getElementById("pedidoQtd").value||"0");
+  const destino=document.getElementById("pedidoDestino").value.trim();
+  const dataEntrega=document.getElementById("pedidoData").value;
+
+  if(!cliente||!material||!qtd||!destino||!dataEntrega){
+    alert("Preencha cliente, material, quantidade, destino e data.");
+    return;
+  }
+
+  pedidos.unshift({id:uid("PED"),cliente,material,qtd,destino,dataEntrega,status:"Pendente",nota:null});
+  persistPedidos();
+
+  ["pedidoCliente","pedidoMaterial","pedidoDestino","pedidoData"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("pedidoQtd").value=1;
+}
+
+function persistPedidos(){
+  localStorage.setItem("pedidos",JSON.stringify(pedidos));
+  renderPedidos();
+}
+
+function emitirNota(id){
+  pedidos=pedidos.map(p=>p.id===id&&p.status!=="Cancelado"?{...p,status:"Nota emitida",nota:{numero:Math.floor(Math.random()*90000+10000),chave:uid("NFE")}}:p);
+  persistPedidos();
+}
+
+function cancelarPedido(id){
+  pedidos=pedidos.map(p=>p.id===id?{...p,status:"Cancelado",nota:null}:p);
+  persistPedidos();
+}
+
+function confirmarEntrega(id){
+  pedidos=pedidos.map(p=>p.id===id?{...p,status:"Entregue"}:p);
+  persistPedidos();
+}
+
+function redirecionarPedido(id){
+  const novoDestino=prompt("Novo destino para redirecionamento:");
+  if(!novoDestino)return;
+  pedidos=pedidos.map(p=>p.id===id?{...p,status:"Redirecionado",destino:novoDestino}:p);
+  persistPedidos();
+}
+
+function renderPedidos(){
+  elements.pedidosBody.innerHTML="";
+  if(!pedidos.length){
+    elements.pedidosBody.innerHTML='<tr><td colspan="8">Nenhum pedido cadastrado.</td></tr>';
+    return;
+  }
+
+  pedidos.forEach(p=>{
+    const nota=p.nota?String(p.nota.numero):"-";
+    const cls=p.status==="Cancelado"?"cancelada":(p.status==="Nota emitida"||p.status==="Entregue")?"emitida":"pendente";
+
+    elements.pedidosBody.innerHTML+=`<tr>
+      <td>${p.id}</td><td>${p.cliente}</td><td>${p.material}</td><td>${p.qtd}</td><td>${p.destino}</td>
+      <td><span class="tag ${cls}">${p.status}</span></td>
+      <td>${nota}</td>
+      <td class="actions">
+        <button class="small" onclick="emitirNota('${p.id}')">Emitir</button>
+        <button class="small" onclick="cancelarPedido('${p.id}')">Cancelar</button>
+        <button class="small" onclick="redirecionarPedido('${p.id}')">Redirecionar</button>
+        <button class="small" onclick="confirmarEntrega('${p.id}')">Entregue</button>
+      </td>
     </tr>`;
   });
 }
 
-document.addEventListener("DOMContentLoaded",init);
+document.addEventListener("DOMContentLoaded",()=>{
+  showLogin();
+  carregarAplicacao();
+});
 </script>
-
 </body>
 </html>
