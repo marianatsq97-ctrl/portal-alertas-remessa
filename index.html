@@ -144,37 +144,55 @@ td{padding:8px;border-bottom:1px solid #1c2544}
 
 <script>
 const users={admin:{pass:"1234",role:"Administrador"},usuario:{pass:"1234",role:"Usuário"}};
+
 let data=[];
 let pedidos=[];
 
-function safeParse(key){
-  try{return JSON.parse(localStorage.getItem(key)||"[]")}catch(_){
-    localStorage.removeItem(key);
-    return [];
-  }
-}
-
 const elements={
-  login:document.getElementById("login"),app:document.getElementById("app"),perfil:document.getElementById("perfil"),
-  ok:document.getElementById("ok"),warn:document.getElementById("warn"),grave:document.getElementById("grave"),action:document.getElementById("action"),
-  tbody:document.getElementById("tbody"),pedidosBody:document.getElementById("pedidosBody"),adminOnly:[...document.querySelectorAll(".admin-only")]
+  login:document.getElementById("login"),
+  app:document.getElementById("app"),
+  perfil:document.getElementById("perfil"),
+  ok:document.getElementById("ok"),
+  warn:document.getElementById("warn"),
+  grave:document.getElementById("grave"),
+  action:document.getElementById("action"),
+  tbody:document.getElementById("tbody"),
+  pedidosBody:document.getElementById("pedidosBody"),
+  adminOnly:[...document.querySelectorAll(".admin-only")]
 };
 
-function showLogin(){elements.login.style.display="flex";elements.app.style.display="none"}
-function showApp(){elements.login.style.display="none";elements.app.style.display="block"}
-
-function login(){
-  const u=document.getElementById("user").value;
-  const p=document.getElementById("pass").value;
-  if(!users[u]||users[u].pass!==p)return alert("Login inválido");
-  localStorage.setItem("user",u);init();
+function safeParse(key){
+  try{return JSON.parse(localStorage.getItem(key)||"[]");}
+  catch(_){localStorage.removeItem(key);return [];}
 }
 
-function logout(){localStorage.removeItem("user");location.reload()}
+function showLogin(){
+  elements.login.style.display="flex";
+  elements.app.style.display="none";
+}
 
-function init(){
+function showApp(){
+  elements.login.style.display="none";
+  elements.app.style.display="block";
+}
+
+function login(){
+  const u=document.getElementById("user").value.trim();
+  const p=document.getElementById("pass").value;
+  if(!users[u]||users[u].pass!==p)return alert("Login inválido");
+
+  localStorage.setItem("user",u);
+  carregarAplicacao();
+}
+
+function logout(){
+  localStorage.removeItem("user");
+  showLogin();
+}
+
+function carregarAplicacao(){
   const u=localStorage.getItem("user");
-  if(!u||!users[u]){localStorage.removeItem("user");showLogin();return}
+  if(!u||!users[u]){showLogin();return;}
 
   showApp();
   elements.perfil.innerText="Perfil: "+users[u].role;
@@ -190,29 +208,41 @@ function init(){
 function importCSV(){
   const file=document.getElementById("file").files[0];
   if(!file)return;
+
   const reader=new FileReader();
   reader.onload=e=>{
     const rows=e.target.result.split("\n").slice(1);
-    data=rows.filter(Boolean).map(r=>{const c=r.split(",");return{cliente:c[0]||"",contrato:c[1]||"",data:c[2]||"",dias:parseInt(c[3]||0)}});
-    localStorage.setItem("data",JSON.stringify(data));render();
+    data=rows.filter(Boolean).map(r=>{
+      const c=r.split(",");
+      return {cliente:c[0]||"",contrato:c[1]||"",data:c[2]||"",dias:parseInt(c[3]||0)};
+    });
+    localStorage.setItem("data",JSON.stringify(data));
+    render();
   };
   reader.readAsText(file,"UTF-8");
 }
 
-function clearData(){if(confirm("Excluir todos os dados?")){localStorage.removeItem("data");data=[];render()}}
-function status(d){if(d<=7)return["OK","ok"];if(d<=14)return["Atenção","warn"];if(d<=21)return["Atenção Grave","grave"];return["Plano de Ação","action"]}
+function clearData(){
+  if(!confirm("Excluir todos os dados?"))return;
+  localStorage.removeItem("data");
+  data=[];
+  render();
+}
+
+function status(d){if(d<=7)return["OK","ok"];if(d<=14)return["Atenção","warn"];if(d<=21)return["Atenção Grave","grave"];return["Plano de Ação","action"];}
 
 function render(){
   elements.ok.innerText=elements.warn.innerText=elements.grave.innerText=elements.action.innerText=0;
   elements.tbody.innerHTML="";
+
   data.forEach(r=>{
-    const [s,c]=status(r.dias);
-    document.getElementById(c).innerText++;
-    elements.tbody.innerHTML+=`<tr><td>${r.cliente}</td><td>${r.contrato}</td><td>${r.data}</td><td>${r.dias}</td><td>${s}</td></tr>`;
+    const [s,c]=status(Number(r.dias)||0);
+    document.getElementById(c).innerText=String(Number(document.getElementById(c).innerText)+1);
+    elements.tbody.innerHTML+=`<tr><td>${r.cliente||""}</td><td>${r.contrato||""}</td><td>${r.data||""}</td><td>${Number(r.dias)||0}</td><td>${s}</td></tr>`;
   });
 }
 
-function uid(prefix){return `${prefix}-${Date.now()}-${Math.floor(Math.random()*90+10)}`}
+function uid(prefix){return `${prefix}-${Date.now()}-${Math.floor(Math.random()*90+10)}`;}
 
 function criarPedido(){
   const cliente=document.getElementById("pedidoCliente").value.trim();
@@ -220,24 +250,26 @@ function criarPedido(){
   const qtd=parseInt(document.getElementById("pedidoQtd").value||"0");
   const destino=document.getElementById("pedidoDestino").value.trim();
   const dataEntrega=document.getElementById("pedidoData").value;
-  if(!cliente||!material||!qtd||!destino||!dataEntrega)return alert("Preencha cliente, material, quantidade, destino e data.");
-  pedidos.unshift({
-    id:uid("PED"),cliente,material,qtd,destino,dataEntrega,
-    status:"Pendente",nota:null
-  });
+
+  if(!cliente||!material||!qtd||!destino||!dataEntrega){
+    alert("Preencha cliente, material, quantidade, destino e data.");
+    return;
+  }
+
+  pedidos.unshift({id:uid("PED"),cliente,material,qtd,destino,dataEntrega,status:"Pendente",nota:null});
   persistPedidos();
+
   ["pedidoCliente","pedidoMaterial","pedidoDestino","pedidoData"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("pedidoQtd").value=1;
 }
 
-function persistPedidos(){localStorage.setItem("pedidos",JSON.stringify(pedidos));renderPedidos()}
+function persistPedidos(){
+  localStorage.setItem("pedidos",JSON.stringify(pedidos));
+  renderPedidos();
+}
 
 function emitirNota(id){
-  pedidos=pedidos.map(p=>{
-    if(p.id!==id)return p;
-    if(p.status==="Cancelado")return p;
-    return {...p,status:"Nota emitida",nota:{numero:Math.floor(Math.random()*90000+10000),chave:uid("NFE")}};
-  });
+  pedidos=pedidos.map(p=>p.id===id&&p.status!=="Cancelado"?{...p,status:"Nota emitida",nota:{numero:Math.floor(Math.random()*90000+10000),chave:uid("NFE")}}:p);
   persistPedidos();
 }
 
@@ -264,15 +296,13 @@ function renderPedidos(){
     elements.pedidosBody.innerHTML='<tr><td colspan="8">Nenhum pedido cadastrado.</td></tr>';
     return;
   }
+
   pedidos.forEach(p=>{
-    const nota=p.nota?`${p.nota.numero}`:"-";
-    const cls=p.status==="Cancelado"?"cancelada":p.status==="Nota emitida"||p.status==="Entregue"?"emitida":"pendente";
+    const nota=p.nota?String(p.nota.numero):"-";
+    const cls=p.status==="Cancelado"?"cancelada":(p.status==="Nota emitida"||p.status==="Entregue")?"emitida":"pendente";
+
     elements.pedidosBody.innerHTML+=`<tr>
-      <td>${p.id}</td>
-      <td>${p.cliente}</td>
-      <td>${p.material}</td>
-      <td>${p.qtd}</td>
-      <td>${p.destino}</td>
+      <td>${p.id}</td><td>${p.cliente}</td><td>${p.material}</td><td>${p.qtd}</td><td>${p.destino}</td>
       <td><span class="tag ${cls}">${p.status}</span></td>
       <td>${nota}</td>
       <td class="actions">
@@ -286,13 +316,8 @@ function renderPedidos(){
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
-  try{
-    init();
-  }catch(err){
-    console.error("Falha ao iniciar o portal:", err);
-    showLogin();
-    alert("Ocorreu um erro ao carregar dados locais. Tente limpar o cache do navegador.");
-  }
+  showLogin();
+  carregarAplicacao();
 });
 </script>
 </body>
