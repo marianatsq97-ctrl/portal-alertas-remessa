@@ -17,3 +17,15 @@ Sistema em layout dashboard para monitorar clientes sem remessa.
 1. Clique em **Selecionar arquivo** e escolha seu `.xlsx`.
 2. Clique em **Carregar arquivo**.
 3. Se necessário, marque **Mostrar materiais/produtos** para ver a coluna extra.
+
+## Publicação automática no GitHub Pages
+Se o GitHub estiver mostrando implantação antiga (ex.: "10 horas atrás"), normalmente é porque não houve novo deploy no branch correto.
+
+Este repositório agora inclui workflow em `.github/workflows/pages.yml` para publicar automaticamente quando houver push no branch `main`.
+
+Checklist:
+1. Confirme que o commit está no branch `main` no GitHub.
+2. Em **Settings → Pages**, deixe **Build and deployment = GitHub Actions**.
+3. Faça um novo push para `main` (ou rode manualmente em **Actions → Deploy GitHub Pages → Run workflow**).
+4. Aguarde o job `deploy` finalizar e atualize a página.
+
