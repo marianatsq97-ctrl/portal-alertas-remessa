@@ -1,336 +1,390 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Portal de Alertas – Remessas</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Alertas – Remessas</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg:#050814; --card:#0b1020; --accent:#ff8c1a; --text:#f5f7ff;
+      --ok:#2ecc71; --warn:#f1c40f; --grave:#f39c12; --action:#e74c3c;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,Segoe UI,Roboto;background:radial-gradient(circle at top,#1a1f33,#050814 60%);color:var(--text)}
+    .hidden{display:none!important}
+    #login{min-height:100vh;display:flex;justify-content:center;align-items:center}
+    .login-card,.card{background:linear-gradient(180deg,#0d1224,#070b16);border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.45)}
+    .login-card{width:min(430px,94vw);padding:28px;text-align:center}
+    .login-card img{width:128px}
+    .login-card input,.toolbar input,.toolbar select,.toolbar button,.small,.modal-card input{width:100%;padding:11px;border-radius:10px;border:none;background:#0b1020;color:#fff}
+    .login-card button,.toolbar button,.small{background:var(--accent);font-weight:700;cursor:pointer}
+    .hint{font-size:12px;opacity:.8}
+    .link-btn{background:none;border:none;color:#ffcea0;text-decoration:underline;cursor:pointer;margin-top:8px}
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    .modal{position:fixed;inset:0;background:#02040bcc;display:none;align-items:center;justify-content:center;z-index:20}
+    .modal.open{display:flex}
+    .modal-card{width:min(460px,94vw);padding:18px;background:linear-gradient(180deg,#0d1224,#070b16);border-radius:16px}
+    .modal-actions{display:flex;gap:8px;margin-top:10px}
 
-<style>
-:root{
-  --bg:#050814;
-  --card:#0b1020;
-  --accent:#ff8c1a;
-  --ok:#2ecc71;
-  --warn:#f1c40f;
-  --grave:#f39c12;
-  --action:#e74c3c;
-  --text:#f5f7ff;
-}
+    #app{display:none;padding:20px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{width:52px}
+    .brand h1{font-size:28px;color:var(--accent);margin:0}
+    .card{padding:16px;margin-bottom:14px}
 
-*{box-sizing:border-box}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .stat{padding:14px;border-radius:12px;background:#090f1f;border-left:5px solid}
+    .stat h3{margin:0 0 6px;font-size:18px}
+    .stat .num{font-size:34px;font-weight:800}
 
-body{
-  margin:0;
-  font-family:system-ui,Segoe UI,Roboto;
-  background:radial-gradient(circle at top,#1a1f33,#050814 60%);
-  color:var(--text);
-}
+    .toolbar{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;align-items:end}
+    .toolbar label{font-size:12px;opacity:.8}
+    .toolbar .field{display:flex;flex-direction:column;gap:4px}
 
-/* LOGIN */
-#login{
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-}
+    table{width:100%;border-collapse:collapse}
+    th{background:var(--accent);color:#120a00;padding:9px;text-align:left}
+    td{padding:8px;border-bottom:1px solid #1b2548;vertical-align:top}
+    .table-wrap{overflow:auto}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700}
+    .ok{background:#2ecc7130;color:#94f2ba}.warn{background:#f1c40f30;color:#ffec9a}.grave{background:#f39c1233;color:#ffd39f}.action{background:#e74c3c33;color:#ffb7ae}
+    .legend{font-size:13px;opacity:.9}
 
-.login-card{
-  width:420px;
-  background:linear-gradient(180deg,#0d1224,#070b16);
-  border-radius:20px;
-  padding:32px;
-  box-shadow:0 20px 60px rgba(0,0,0,.6);
-  text-align:center;
-}
-
-.login-card img{
-  width:140px;
-  margin-bottom:16px;
-  filter:brightness(1.2);
-}
-
-.login-card h1{margin:0}
-.login-card p{opacity:.8}
-
-.login-card input{
-  width:100%;
-  padding:14px;
-  margin-top:12px;
-  border-radius:12px;
-  border:none;
-  background:#0b1020;
-  color:white;
-}
-
-.login-card button{
-  margin-top:18px;
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:14px;
-  background:var(--accent);
-  font-weight:700;
-  cursor:pointer;
-}
-
-/* APP */
-#app{display:none;padding:24px}
-
-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:24px;
-}
-
-header .left{
-  display:flex;
-  align-items:center;
-  gap:16px;
-}
-
-header img{
-  width:56px;
-  filter:brightness(1.1);
-}
-
-.card{
-  background:linear-gradient(180deg,#0c1226,#070b16);
-  border-radius:20px;
-  padding:20px;
-  margin-bottom:20px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;
-}
-
-.stat{
-  border-left:6px solid;
-}
-
-.stat.ok{border-color:var(--ok)}
-.stat.warn{border-color:var(--warn)}
-.stat.grave{border-color:var(--grave)}
-.stat.action{border-color:var(--action)}
-
-.stat h2{margin:0;font-size:18px}
-.stat span{font-size:32px;font-weight:700}
-
-button.small{
-  padding:8px 14px;
-  border-radius:10px;
-  border:none;
-  background:#121a33;
-  color:white;
-  cursor:pointer;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th{
-  background:var(--accent);
-  padding:10px;
-  text-align:left;
-}
-
-td{
-  padding:8px;
-  border-bottom:1px solid #1c2544;
-}
-
-.admin-only{display:none}
-</style>
+    @media (max-width:1024px){
+      .grid{grid-template-columns:repeat(2,1fr)}
+      .toolbar{grid-template-columns:1fr 1fr}
+    }
+  </style>
 </head>
-
 <body>
+  <section id="login">
+    <div class="login-card">
+      <img src="logo-areia-ana.png" alt="Logo Areia Ana">
+      <h2>Portal de Alertas</h2>
+      <p class="hint">Controle de clientes sem remessa</p>
+      <input id="user" placeholder="Usuário">
+      <input id="pass" type="password" placeholder="Senha">
+      <button onclick="login()">Entrar</button>
+      <button class="link-btn" onclick="abrirRecuperacao()">Esqueci meu usuário/senha</button>
+      <p class="hint">Acesso padrão: admin/1234 ou usuario/1234.</p>
+    </div>
+  </section>
 
-<!-- LOGIN -->
-<div id="login">
-  <div class="login-card">
-    <img src="logo-areia-ana.png">
-    <h1>Portal de Alertas</h1>
-    <p>Remessas • Contratos • Status automático</p>
-
-    <input id="user" placeholder="Usuário">
-    <input id="pass" type="password" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
+  <div id="recoveryModal" class="modal">
+    <div class="modal-card">
+      <h3>Recuperação de conta</h3>
+      <p class="hint">Use usuário + chave de recuperação para definir nova senha.</p>
+      <input id="recoveryUser" placeholder="Usuário">
+      <input id="recoveryKey" placeholder="Chave de recuperação">
+      <input id="newPass" type="password" placeholder="Nova senha">
+      <div class="modal-actions">
+        <button class="small" onclick="fecharRecuperacao()">Cancelar</button>
+        <button onclick="recuperarConta()">Salvar nova senha</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- APP -->
-<div id="app">
+  <main id="app">
+    <header>
+      <div class="brand">
+        <img src="logo-areia-ana.png" alt="Logo Areia Ana">
+        <div>
+          <h1>Portal de Alertas – Remessas</h1>
+          <div class="hint" id="perfil"></div>
+        </div>
+      </div>
+      <button class="small" onclick="logout()" style="width:auto;padding:10px 14px">Sair</button>
+    </header>
 
-<header>
-  <div class="left">
-    <img src="logo-areia-ana.png">
-    <h2>Portal de Alertas – Remessas</h2>
-  </div>
-  <div>
-    <span id="perfil"></span>
-    <button class="small" onclick="logout()">Sair</button>
-  </div>
-</header>
+    <section class="card">
+      <div class="legend" id="legendaResumo">Legenda: 0–7 OK (verde), 8–14 Atenção (amarelo), 15–21 Atenção grave (laranja), acima de 21 Plano de ação (vermelho).</div>
+      <div class="hint" id="registrosInfo">Registros exibidos: 0 • Clientes únicos: 0</div>
+      <div class="grid" style="margin-top:10px">
+        <div class="stat" style="border-color:var(--ok)"><h3>OK</h3><div id="ok" class="num">0</div><small>0–7 dias sem remessa</small></div>
+        <div class="stat" style="border-color:var(--warn)"><h3>Atenção</h3><div id="warn" class="num">0</div><small>8–14 dias sem remessa</small></div>
+        <div class="stat" style="border-color:var(--grave)"><h3>Atenção grave</h3><div id="grave" class="num">0</div><small>15–21 dias sem remessa</small></div>
+        <div class="stat" style="border-color:var(--action)"><h3>Plano de ação</h3><div id="action" class="num">0</div><small>Acima de 21 dias sem remessa</small></div>
+      </div>
+    </section>
 
-<div class="card grid">
-  <div class="stat ok"><h2>OK</h2><span id="ok">0</span></div>
-  <div class="stat warn"><h2>Atenção</h2><span id="warn">0</span></div>
-  <div class="stat grave"><h2>Atenção Grave</h2><span id="grave">0</span></div>
-  <div class="stat action"><h2>Plano de Ação</h2><span id="action">0</span></div>
-</div>
+    <section class="card admin-only">
+      <h3>Importação</h3>
+      <div class="toolbar">
+        <div class="field">
+          <label>Arquivo (.csv, .xlsx, .xls)</label>
+          <input id="file" type="file" accept=".csv,.xlsx,.xls">
+        </div>
+        <button onclick="importFile()">Carregar arquivo</button>
+        <button onclick="clearData()">Excluir dados</button>
+      </div>
+    </section>
 
-<div class="card admin-only">
-  <h3>Administração</h3>
-  <input type="file" id="file">
-  <button class="small" onclick="importCSV()">Importar</button>
-  <button class="small" onclick="clearData()">Excluir Dados</button>
-</div>
+    <section class="card">
+      <h3>Filtros</h3>
+      <div class="toolbar">
+        <div class="field"><label>Cliente/CNPJ</label><input id="filtroCliente" placeholder="Digite cliente ou CNPJ" oninput="render()"></div>
+        <div class="field"><label>Contrato</label><input id="filtroContrato" placeholder="Digite contrato" oninput="render()"></div>
+        <div class="field"><label>Mês da última remessa</label><select id="filtroMes" onchange="render()"><option value="">Todos</option></select></div>
+        <div class="field"><label>Status</label><select id="filtroStatus" onchange="render()"><option value="">Todos</option><option>OK</option><option>Atenção</option><option>Atenção grave</option><option>Plano de ação</option></select></div>
+        <button onclick="limparFiltros()">Limpar filtros</button>
+      </div>
+    </section>
 
-<div class="card">
-  <h3>Detalhamento</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Cliente</th>
-        <th>Contrato</th>
-        <th>Última Remessa</th>
-        <th>Dias</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-  </table>
-</div>
-
-</div>
+    <section class="card">
+      <h3>Detalhamento</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>CNPJ</th>
+              <th>Cliente</th>
+              <th>Contrato(s)</th>
+              <th>Última remessa</th>
+              <th>Ritmo</th>
+              <th>Dias sem remessa</th>
+              <th>Volume da obra</th>
+              <th>Nome da obra</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
 
 <script>
-const users={
-  admin:{pass:"1234",role:"Administrador"},
-  usuario:{pass:"1234",role:"Usuário"}
+const defaultUsers={
+  admin:{pass:"1234",role:"Administrador",recoveryKey:"AREIAANA-ADMIN"},
+  usuario:{pass:"1234",role:"Usuário",recoveryKey:"AREIAANA-USUARIO"}
 };
 
-let data=[];
-
-const elements={
-  login:document.getElementById("login"),
-  app:document.getElementById("app"),
-  perfil:document.getElementById("perfil"),
-  ok:document.getElementById("ok"),
-  warn:document.getElementById("warn"),
-  grave:document.getElementById("grave"),
-  action:document.getElementById("action"),
-  tbody:document.getElementById("tbody"),
-  adminOnly:[...document.querySelectorAll(".admin-only")]
+const el={
+  login:document.getElementById("login"), app:document.getElementById("app"), perfil:document.getElementById("perfil"),
+  ok:document.getElementById("ok"), warn:document.getElementById("warn"), grave:document.getElementById("grave"), action:document.getElementById("action"),
+  tbody:document.getElementById("tbody"), file:document.getElementById("file"),
+  adminOnly:[...document.querySelectorAll(".admin-only")],
+  filtroCliente:document.getElementById("filtroCliente"), filtroContrato:document.getElementById("filtroContrato"),
+  filtroMes:document.getElementById("filtroMes"), filtroStatus:document.getElementById("filtroStatus"),
+  registrosInfo:document.getElementById("registrosInfo")
 };
 
-function showLogin(){
-  elements.login.style.display="flex";
-  elements.app.style.display="none";
+let users={};
+let rows=[];
+
+function safeParseObj(key,fallback){
+  try{const val=JSON.parse(localStorage.getItem(key)); return val??fallback;}catch(_){localStorage.removeItem(key); return fallback;}
 }
 
-function showApp(){
-  elements.login.style.display="none";
-  elements.app.style.display="block";
+function loadUsers(){
+  const stored=safeParseObj("users",{});
+  users={...defaultUsers,...stored};
+  localStorage.setItem("users",JSON.stringify(users));
 }
+
+function openLogin(){el.login.style.display="flex"; el.app.style.display="none";}
+function openApp(){el.login.style.display="none"; el.app.style.display="block";}
 
 function login(){
-  const u=document.getElementById("user").value;
+  const u=document.getElementById("user").value.trim();
   const p=document.getElementById("pass").value;
-  if(!users[u]||users[u].pass!==p)return alert("Login inválido");
-
+  loadUsers();
+  if(!users[u]||users[u].pass!==p){alert("Login inválido"); return;}
   localStorage.setItem("user",u);
-  init();
+  bootstrap();
 }
 
-function logout(){
-  localStorage.clear();
-  location.reload();
+function logout(){localStorage.removeItem("user"); openLogin();}
+function abrirRecuperacao(){document.getElementById("recoveryModal").classList.add("open");}
+function fecharRecuperacao(){document.getElementById("recoveryModal").classList.remove("open");}
+
+function recuperarConta(){
+  loadUsers();
+  const user=document.getElementById("recoveryUser").value.trim();
+  const key=document.getElementById("recoveryKey").value.trim();
+  const newPass=document.getElementById("newPass").value;
+  if(!user||!key||!newPass){alert("Preencha usuário, chave e nova senha."); return;}
+  if(!users[user]){alert("Usuário não encontrado."); return;}
+  if(users[user].recoveryKey!==key){alert("Chave de recuperação inválida."); return;}
+  users[user].pass=newPass;
+  localStorage.setItem("users",JSON.stringify(users));
+  fecharRecuperacao();
+  alert("Senha atualizada com sucesso.");
 }
 
-function init(){
-  const u=localStorage.getItem("user");
-  if(!u||!users[u]){
-    localStorage.removeItem("user");
-    showLogin();
+function parseDate(v){
+  if(!v) return null;
+  if(v instanceof Date && !isNaN(v)) return v;
+  const s=String(v).trim();
+  if(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(s)){
+    const [d,m,y]=s.split('/').map(Number); return new Date(y<100?2000+y:y,m-1,d);
+  }
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+
+function findVal(obj,keys){
+  const norm=Object.fromEntries(Object.keys(obj).map(k=>[k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),obj[k]]));
+  for(const key of keys){
+    const v=norm[key];
+    if(v!==undefined && String(v).trim()!=="") return v;
+  }
+  return "";
+}
+
+function normalize(raw){
+  return raw.map(r=>{
+    const dt=parseDate(findVal(r,["data da remessa","data remessa","ultima remessa","data"]));
+    const cnpj=String(findVal(r,["cnpj","cpf/cnpj","documento","chave cliente"])||"").replace(/\D/g,'');
+    const cliente=String(findVal(r,["cliente","razao social","nome cliente"])||"").trim();
+    const contrato=String(findVal(r,["contrato","n contrato","numero contrato"])||"").trim();
+    const volumeObra=String(findVal(r,["volume da obra","volume obra","volume"])||"").trim();
+    const nomeObra=String(findVal(r,["nome da obra","obra","nome obra"])||"").trim();
+    return {cnpj,cliente,contrato,volumeObra,nomeObra,dataRemessa:dt};
+  }).filter(r=>r.cliente||r.cnpj);
+}
+
+function aggregateByCnpj(list){
+  const map=new Map();
+  list.forEach(r=>{
+    const key=r.cnpj||`sem-cnpj:${r.cliente.toLowerCase()}`;
+    if(!map.has(key)) map.set(key,{...r,contratos:new Set(),obras:new Set(),volume:0});
+    const row=map.get(key);
+    if(r.contrato) row.contratos.add(r.contrato);
+    if(r.nomeObra) row.obras.add(r.nomeObra);
+    const vol=Number(String(r.volumeObra).replace(',','.'));
+    if(!Number.isNaN(vol)) row.volume+=vol;
+    if(!row.dataRemessa || (r.dataRemessa && r.dataRemessa>row.dataRemessa)) row.dataRemessa=r.dataRemessa;
+    if(!row.cliente && r.cliente) row.cliente=r.cliente;
+    if(!row.cnpj && r.cnpj) row.cnpj=r.cnpj;
+  });
+  return [...map.values()].map(r=>({
+    cnpj:r.cnpj||"-",
+    cliente:r.cliente||"-",
+    contratos:[...r.contratos],
+    nomeObra:[...r.obras].join(" | ")||"-",
+    volumeObra:r.volume?String(r.volume.toFixed(2)).replace('.',','):"-",
+    dataRemessa:r.dataRemessa
+  }));
+}
+
+function statusByDays(dias){
+  if(dias<=7) return {txt:"OK",cls:"ok"};
+  if(dias<=14) return {txt:"Atenção",cls:"warn"};
+  if(dias<=21) return {txt:"Atenção grave",cls:"grave"};
+  return {txt:"Plano de ação",cls:"action"};
+}
+
+function ritmo(dias){
+  if(dias>365) return `${Math.floor(dias/365)} ano(s)`;
+  if(dias>31) return `${Math.floor(dias/30)} mês(es)`;
+  return `${dias} dia(s)`;
+}
+
+function formatDate(d){return d?d.toLocaleDateString('pt-BR'):"-";}
+function ymKey(d){if(!d) return "Sem data"; return `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;}
+
+async function importFile(){
+  const file=el.file.files[0];
+  if(!file){alert("Escolha um arquivo."); return;}
+  try{
+    let raw=[];
+    if(/\.(xlsx|xls)$/i.test(file.name)){
+      const buf=await file.arrayBuffer();
+      const wb=XLSX.read(buf,{type:'array'});
+      raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
+    }else{
+      const txt=await file.text();
+      const wb=XLSX.read(txt,{type:'string'});
+      raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
+    }
+    rows=normalize(raw);
+    localStorage.setItem("dataRows",JSON.stringify(rows));
+    render();
+    alert(`Arquivo carregado com sucesso: ${rows.length} registro(s).`);
+  }catch(e){
+    console.error(e);
+    alert("Falha ao importar arquivo. Verifique se é CSV/XLSX válido.");
+  }
+}
+
+function clearData(){ if(confirm("Excluir todos os dados importados?")){ localStorage.removeItem("dataRows"); rows=[]; render(); } }
+
+function populateMonthFilter(items){
+  const current=el.filtroMes.value;
+  const opts=[...new Set(items.map(i=>ymKey(i.dataRemessa)).filter(v=>v!=="Sem data"))].sort((a,b)=>{
+    const [ma,ya]=a.split('/').map(Number), [mb,yb]=b.split('/').map(Number);
+    return yb-ya || mb-ma;
+  });
+  el.filtroMes.innerHTML='<option value="">Todos</option>'+opts.map(o=>`<option value="${o}">${o}</option>`).join('');
+  el.filtroMes.value=opts.includes(current)?current:"";
+}
+
+function limparFiltros(){el.filtroCliente.value="";el.filtroContrato.value="";el.filtroMes.value="";el.filtroStatus.value="";render();}
+
+function render(){
+  const aggregated=aggregateByCnpj(rows).map(r=>{
+    const dias=r.dataRemessa?Math.max(0,Math.floor((Date.now()-r.dataRemessa)/86400000)):9999;
+    const st=statusByDays(dias);
+    return {...r,dias,status:st.txt,statusClass:st.cls,mes:ymKey(r.dataRemessa)};
+  }).sort((a,b)=>b.dias-a.dias); // prioriza sem remessa há mais tempo
+
+  populateMonthFilter(aggregated);
+
+  const fCliente=el.filtroCliente.value.trim().toLowerCase();
+  const fContrato=el.filtroContrato.value.trim().toLowerCase();
+  const fMes=el.filtroMes.value;
+  const fStatus=el.filtroStatus.value;
+
+  const filtered=aggregated.filter(r=>{
+    const hitCliente=!fCliente || r.cliente.toLowerCase().includes(fCliente) || r.cnpj.includes(fCliente.replace(/\D/g,''));
+    const hitContrato=!fContrato || r.contratos.join(' | ').toLowerCase().includes(fContrato);
+    const hitMes=!fMes || r.mes===fMes;
+    const hitStatus=!fStatus || r.status===fStatus;
+    return hitCliente && hitContrato && hitMes && hitStatus;
+  });
+
+  const counters={ok:0,warn:0,grave:0,action:0};
+  filtered.forEach(r=>counters[r.statusClass]++);
+  el.ok.innerText=counters.ok; el.warn.innerText=counters.warn; el.grave.innerText=counters.grave; el.action.innerText=counters.action;
+
+  el.registrosInfo.innerText=`Registros exibidos: ${filtered.length} • Clientes únicos: ${filtered.length}`;
+
+  el.tbody.innerHTML="";
+  if(!filtered.length){
+    el.tbody.innerHTML='<tr><td colspan="9">Nenhum registro encontrado para os filtros atuais.</td></tr>';
     return;
   }
 
-  showApp();
-  elements.perfil.innerText="Perfil: "+users[u].role;
-
-  if(users[u].role==="Administrador"){
-    elements.adminOnly.forEach(e=>e.style.display="block");
-  }else{
-    elements.adminOnly.forEach(e=>e.style.display="none");
-  }
-
-  data=JSON.parse(localStorage.getItem("data")||"[]");
-  render();
-}
-
-function importCSV(){
-  const file=document.getElementById("file").files[0];
-  if(!file)return;
-
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const text=e.target.result;
-    const rows=text.split("\n").slice(1);
-    data=rows.map(r=>{
-      const c=r.split(",");
-      return{
-        cliente:c[0]||"",
-        contrato:c[1]||"",
-        data:c[2]||"",
-        dias:parseInt(c[3]||0)
-      };
-    });
-    localStorage.setItem("data",JSON.stringify(data));
-    render();
-  };
-  reader.readAsText(file,"UTF-8");
-}
-
-function clearData(){
-  if(confirm("Excluir todos os dados?")){
-    localStorage.removeItem("data");
-    data=[];
-    render();
-  }
-}
-
-function status(d){
-  if(d<=7)return["OK","ok"];
-  if(d<=14)return["Atenção","warn"];
-  if(d<=21)return["Atenção Grave","grave"];
-  return["Plano de Ação","action"];
-}
-
-function render(){
-  elements.ok.innerText=elements.warn.innerText=elements.grave.innerText=elements.action.innerText=0;
-  elements.tbody.innerHTML="";
-  data.forEach(r=>{
-    const [s,c]=status(r.dias);
-    document.getElementById(c).innerText++;
-    elements.tbody.innerHTML+=`<tr>
+  filtered.forEach(r=>{
+    el.tbody.innerHTML+=`<tr>
+      <td>${r.cnpj||"-"}</td>
       <td>${r.cliente}</td>
-      <td>${r.contrato}</td>
-      <td>${r.data}</td>
+      <td>${r.contratos.length?r.contratos.join(" | "):"-"}</td>
+      <td>${formatDate(r.dataRemessa)}</td>
+      <td>${ritmo(r.dias)}</td>
       <td>${r.dias}</td>
-      <td>${s}</td>
+      <td>${r.volumeObra}</td>
+      <td>${r.nomeObra}</td>
+      <td><span class="badge ${r.statusClass}">${r.status}</span></td>
     </tr>`;
   });
 }
 
-document.addEventListener("DOMContentLoaded",init);
-</script>
+function bootstrap(){
+  loadUsers();
+  const u=localStorage.getItem("user");
+  if(!u || !users[u]){openLogin();return;}
+  openApp();
+  el.perfil.innerText=`Perfil: ${users[u].role}`;
+  el.adminOnly.forEach(c=>c.classList.toggle("hidden", users[u].role!=="Administrador"));
+  rows=safeParseObj("dataRows",[]);
+  if(!Array.isArray(rows)) rows=[];
+  render();
+}
 
+document.addEventListener("DOMContentLoaded",()=>{openLogin();bootstrap();});
+</script>
 </body>
 </html>
