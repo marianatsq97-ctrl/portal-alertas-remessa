@@ -66,6 +66,24 @@ git checkout work
 git pull origin work
 ```
 
+### Se no GitHub aparecer "There isn't anything to compare"
+Se a tela de **Comparing changes** mostrar que `main` e `work` são idênticas, significa que **não existe PR pendente** para mergear.
+
+Nesse caso, faça estas validações em sequência:
+1. Abra **Actions** e confirme o último workflow `pages build and deployment` com status verde.
+2. Abra **Settings → Pages** e clique em **Visit site**.
+3. Faça atualização forçada no navegador (`Ctrl+F5`) ou teste em aba anônima.
+4. Se ainda não refletir, aguarde 2 a 5 minutos e recarregue novamente (cache/CDN do Pages).
+
+Se você precisar publicar mudança nova, primeiro gere um commit novo na `work`:
+```powershell
+git checkout work
+git add .
+git commit -m "Nova atualização do portal"
+git push origin work
+```
+Depois abra o PR `work -> main`.
+
 ### Fluxo final para publicar no GitHub Pages (quando já existe clone)
 1. Atualize `work`:
    ```powershell
