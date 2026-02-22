@@ -1,109 +1,183 @@
-const USERS = {
-  admin: { senha: "admin123", role: "admin" },
-  usuario: { senha: "usuario123", role: "user" }
-};
+const tableBody = document.getElementById('tableBody');
+const recordsInfo = document.getElementById('recordsInfo');
+const fileInput = document.getElementById('fileInput');
+const fileName = document.getElementById('fileName');
+const statusMsg = document.getElementById('statusMsg');
+const chartBars = document.getElementById('chartBars');
+const chartLabels = document.getElementById('chartLabels');
 
-let dados = JSON.parse(localStorage.getItem("remessas")) || [];
+const monthFilter = document.getElementById('monthFilter');
+const yearFilter = document.getElementById('yearFilter');
 
-/* LOGIN */
-function login() {
-  const u = loginUser.value;
-  const p = loginPass.value;
+let rawData = [];
 
-  if (!USERS[u] || USERS[u].senha !== p) {
-    loginError.innerText = "Usuário ou senha inválidos";
+function parseDateBR(dateStr) {
+  if (!dateStr) return null;
+  const [d, m, y] = dateStr.split('/').map(Number);
+  if (!d || !m || !y) return null;
+  return new Date(y, m - 1, d);
+}
+
+function daysWithoutShipment(dateStr) {
+  const date = parseDateBR(dateStr);
+  if (!date) return 0;
+  return Math.floor((Date.now() - date.getTime()) / 86400000);
+}
+
+function statusFromDays(days) {
+  if (days <= 7) return { text: 'OK', css: 'ok' };
+  if (days <= 14) return { text: 'Atenção', css: 'warn' };
+  if (days <= 21) return { text: 'Atenção grave', css: 'grave' };
+  return { text: 'Plano de ação', css: 'action' };
+}
+
+function populateFilters(data) {
+  const years = [...new Set(data.map(item => (parseDateBR(item['Data da remessa']) || new Date()).getFullYear()))].sort();
+  const months = [...new Set(data.map(item => (parseDateBR(item['Data da remessa']) || new Date()).getMonth() + 1))].sort((a, b) => a - b);
+
+  yearFilter.innerHTML = '<option value="todos">Ano: todos</option>' + years.map(y => `<option value="${y}">Ano: ${y}</option>`).join('');
+  monthFilter.innerHTML = '<option value="todos">Mês: todos</option>' + months.map(m => `<option value="${m}">Mês: ${String(m).padStart(2, '0')}</option>`).join('');
+}
+
+function filteredData() {
+  return rawData.filter(item => {
+    const dt = parseDateBR(item['Data da remessa']);
+    if (!dt) return false;
+    const yearOk = yearFilter.value === 'todos' || String(dt.getFullYear()) === yearFilter.value;
+    const monthOk = monthFilter.value === 'todos' || String(dt.getMonth() + 1) === monthFilter.value;
+    return yearOk && monthOk;
+  });
+}
+
+function updateSummary(data) {
+  const count = { ok: 0, warn: 0, grave: 0, action: 0 };
+  data.forEach(item => {
+    const st = statusFromDays(daysWithoutShipment(item['Data da remessa']));
+    count[st.css] += 1;
+  });
+
+  document.getElementById('ok').textContent = count.ok;
+  document.getElementById('warn').textContent = count.warn;
+  document.getElementById('grave').textContent = count.grave;
+  document.getElementById('action').textContent = count.action;
+
+  document.getElementById('contratos').textContent = new Set(data.map(item => item.Contrato)).size;
+  document.getElementById('clientes').textContent = new Set(data.map(item => item.Cliente)).size;
+  document.getElementById('volume').textContent = data.reduce((acc, item) => acc + Number(item.Quantidade || 0), 0);
+}
+
+function renderChart(data) {
+  const grouped = {};
+  data.forEach(item => {
+    const dt = parseDateBR(item['Data da remessa']);
+    if (!dt) return;
+    const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+    grouped[key] = (grouped[key] || 0) + Number(item.Quantidade || 0);
+  });
+
+  const entries = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
+  const max = Math.max(...entries.map(([, value]) => value), 1);
+
+  chartBars.innerHTML = '';
+  chartLabels.innerHTML = '';
+
+  entries.forEach(([label, value]) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = `${Math.max(18, (value / max) * 200)}px`;
+    bar.title = `${label}: ${value}`;
+    chartBars.appendChild(bar);
+
+    const text = document.createElement('span');
+    text.textContent = label;
+    text.style.width = '48px';
+    text.style.textAlign = 'center';
+    chartLabels.appendChild(text);
+  });
+}
+
+function renderTable(data) {
+  const sorted = [...data].sort((a, b) => daysWithoutShipment(b['Data da remessa']) - daysWithoutShipment(a['Data da remessa']));
+
+  tableBody.innerHTML = sorted.map(item => {
+    const days = daysWithoutShipment(item['Data da remessa']);
+    const status = statusFromDays(days);
+    const months = (days / 30).toFixed(1);
+
+    return `
+      <tr>
+        <td>-<br><small>${item.Cliente || ''}</small></td>
+        <td>${item.Contrato || '-'}</td>
+        <td>-</td>
+        <td>${item.Quantidade || 0}</td>
+        <td>${item['Data da remessa'] || '-'}</td>
+        <td>${days} dias (${months} meses)</td>
+        <td><span class="badge ${status.css}">${status.text}</span></td>
+      </tr>`;
+  }).join('');
+
+  recordsInfo.textContent = `Mostrando ${sorted.length} de ${sorted.length} registros • Página 1/1`;
+}
+
+function renderAll() {
+  const data = filteredData();
+  updateSummary(data);
+  renderChart(data);
+  renderTable(data);
+}
+
+async function loadDemo() {
+  const response = await fetch('data/demo.json');
+  rawData = await response.json();
+  populateFilters(rawData);
+  renderAll();
+  statusMsg.textContent = 'Demo carregada com sucesso.';
+}
+
+function clearData() {
+  rawData = [];
+  tableBody.innerHTML = '';
+  chartBars.innerHTML = '';
+  chartLabels.innerHTML = '';
+  recordsInfo.textContent = 'Mostrando 0 de 0 registros';
+  ['ok', 'warn', 'grave', 'action', 'contratos', 'clientes', 'volume'].forEach(id => {
+    document.getElementById(id).textContent = '0';
+  });
+  statusMsg.textContent = 'Dados removidos.';
+}
+
+function readSelectedFile() {
+  const file = fileInput.files?.[0];
+  if (!file) {
+    statusMsg.textContent = 'Selecione um arquivo antes de carregar.';
     return;
   }
 
-  sessionStorage.setItem("perfil", USERS[u].role);
-  iniciarSistema();
-}
-
-function logout() {
-  sessionStorage.clear();
-  location.reload();
-}
-
-function iniciarSistema() {
-  loginScreen.classList.add("hidden");
-  app.classList.remove("hidden");
-
-  const perfil = sessionStorage.getItem("perfil");
-  perfilInfo.innerText = `Perfil: ${perfil === "admin" ? "Administrador" : "Usuário"}`;
-
-  if (perfil !== "admin") {
-    importPanel.style.display = "none";
-  }
-
-  render();
-}
-
-/* IMPORTAÇÃO */
-function importarArquivo() {
-  const file = fileInput.files[0];
-  if (!file) return;
-
+  fileName.textContent = file.name;
   const reader = new FileReader();
-  reader.onload = e => {
-    const wb = XLSX.read(e.target.result, { type: "binary" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    dados = XLSX.utils.sheet_to_json(ws);
-    localStorage.setItem("remessas", JSON.stringify(dados));
-    render();
+  reader.onload = event => {
+    try {
+      rawData = JSON.parse(String(event.target?.result || '[]'));
+      populateFilters(rawData);
+      renderAll();
+      statusMsg.textContent = 'Arquivo carregado com sucesso.';
+    } catch {
+      statusMsg.textContent = 'Falha ao ler o arquivo (formato esperado: JSON).';
+    }
   };
-  reader.readAsBinaryString(file);
+  reader.readAsText(file);
 }
 
-function excluirArquivo() {
-  if (!confirm("Excluir dados?")) return;
-  localStorage.removeItem("remessas");
-  dados = [];
-  render();
-}
+document.getElementById('loadFileBtn').addEventListener('click', readSelectedFile);
+document.getElementById('loadDemoBtn').addEventListener('click', loadDemo);
+document.getElementById('clearBtn').addEventListener('click', clearData);
+document.getElementById('refreshChartBtn').addEventListener('click', renderAll);
 
-/* STATUS */
-function statusPorDias(dias) {
-  if (dias <= 7) return { t: "OK", c: "#2ecc71" };
-  if (dias <= 14) return { t: "Atenção", c: "#f1c40f" };
-  if (dias <= 21) return { t: "Atenção Grave", c: "#e67e22" };
-  return { t: "Plano de Ação", c: "#e74c3c" };
-}
+fileInput.addEventListener('change', () => {
+  fileName.textContent = fileInput.files?.[0]?.name || 'Nenhum arquivo selecionado';
+});
 
-/* RENDER */
-function render() {
-  tbody.innerHTML = "";
-  cards.innerHTML = "";
+yearFilter.addEventListener('change', renderAll);
+monthFilter.addEventListener('change', renderAll);
 
-  const cont = { OK: 0, "Atenção": 0, "Atenção Grave": 0, "Plano de Ação": 0 };
-
-  dados.forEach(r => {
-    const d = new Date(r["DATA DA REMESSA"] || r["Data da remessa"]);
-    const dias = Math.floor((Date.now() - d) / 86400000);
-    const st = statusPorDias(dias);
-
-    cont[st.t]++;
-
-    tbody.innerHTML += `
-      <tr>
-        <td>${r.CLIENTE || ""}</td>
-        <td>${r.CONTRATO || ""}</td>
-        <td>${r.VENDEDOR || ""}</td>
-        <td>${r.TRAÇO || ""}</td>
-        <td>${d.toLocaleDateString()}</td>
-        <td>${dias}</td>
-        <td><span class="badge" style="background:${st.c}">${st.t}</span></td>
-      </tr>`;
-  });
-
-  Object.entries(cont).forEach(([k, v]) => {
-    cards.innerHTML += `
-      <div class="card" style="border-color:${statusPorDias(
-        k === "OK" ? 1 : k === "Atenção" ? 10 : k === "Atenção Grave" ? 18 : 30
-      ).c}">
-        <b>${k}</b><br>${v}
-      </div>`;
-  });
-}
-
-/* INIT */
-if (sessionStorage.getItem("perfil")) iniciarSistema();
+loadDemo();
