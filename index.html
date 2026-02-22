@@ -213,6 +213,32 @@ function recuperarConta(){
   alert("Senha atualizada com sucesso.");
 }
 
+
+function decodeCsvWithFallback(buffer){
+  const candidates=[];
+  const utf8=new TextDecoder("utf-8",{fatal:false}).decode(buffer);
+  candidates.push({enc:"utf-8",text:utf8});
+  try{candidates.push({enc:"windows-1252",text:new TextDecoder("windows-1252").decode(buffer)});}catch(_){ }
+  try{candidates.push({enc:"iso-8859-1",text:new TextDecoder("iso-8859-1").decode(buffer)});}catch(_){ }
+
+  const score=(text)=>{
+    const replacement=(text.match(/�/g)||[]).length;
+    const control=(text.match(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g)||[]).length;
+    const hasKeywords=/(cliente|contrato|remessa|cnpj|obra)/i.test(text)?-80:0;
+    return replacement*10+control*4+hasKeywords;
+  };
+
+  candidates.sort((a,b)=>score(a.text)-score(b.text));
+  return candidates[0].text;
+}
+
+function cleanText(v){
+  return String(v??"")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,"")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
 function parseDate(v){
   if(!v) return null;
   if(v instanceof Date && !isNaN(v)) return v;
@@ -236,11 +262,11 @@ function findVal(obj,keys){
 function normalize(raw){
   return raw.map(r=>{
     const dt=parseDate(findVal(r,["data da remessa","data remessa","ultima remessa","data"]));
-    const cnpj=String(findVal(r,["cnpj","cpf/cnpj","documento","chave cliente"])||"").replace(/\D/g,'');
-    const cliente=String(findVal(r,["cliente","razao social","nome cliente"])||"").trim();
-    const contrato=String(findVal(r,["contrato","n contrato","numero contrato"])||"").trim();
-    const volumeObra=String(findVal(r,["volume da obra","volume obra","volume"])||"").trim();
-    const nomeObra=String(findVal(r,["nome da obra","obra","nome obra"])||"").trim();
+    const cnpj=cleanText(findVal(r,["cnpj","cpf/cnpj","documento","chave cliente"])||"").replace(/\D/g,'');
+    const cliente=cleanText(findVal(r,["cliente","razao social","nome cliente"])||"");
+    const contrato=cleanText(findVal(r,["contrato","n contrato","numero contrato"])||"");
+    const volumeObra=cleanText(findVal(r,["volume da obra","volume obra","volume"])||"");
+    const nomeObra=cleanText(findVal(r,["nome da obra","obra","nome obra"])||"");
     return {cnpj,cliente,contrato,volumeObra,nomeObra,dataRemessa:dt};
   }).filter(r=>r.cliente||r.cnpj);
 }
@@ -295,11 +321,18 @@ async function importFile(){
       const wb=XLSX.read(buf,{type:'array'});
       raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
     }else{
-      const txt=await file.text();
-      const wb=XLSX.read(txt,{type:'string'});
+      const buf=await file.arrayBuffer();
+      const txt=decodeCsvWithFallback(buf);
+      const wb=XLSX.read(txt,{type:'string',raw:false,codepage:65001});
       raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
     }
     rows=normalize(raw);
+    const sample=rows.slice(0,30).map(r=>`${r.cliente} ${r.contrato} ${r.nomeObra}`).join(" ");
+    const garbled=(sample.match(/�/g)||[]).length;
+    if(garbled>20){
+      alert("O arquivo parece com codificação inválida. Salve como UTF-8 ou Excel (.xlsx) e tente novamente.");
+      return;
+    }
     localStorage.setItem("dataRows",JSON.stringify(rows));
     render();
     alert(`Arquivo carregado com sucesso: ${rows.length} registro(s).`);
