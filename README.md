@@ -40,7 +40,16 @@ git status
 git branch -a
 ```
 
-Se aparecer `On branch main`, deu certo. A partir daí, para publicar a branch de trabalho:
+Se aparecer `On branch main`, deu certo.
+
+### Se a branch `work` ainda não existir no seu clone/remoto
+No seu print, esse foi exatamente o erro (`src refspec work does not match any`), então crie a branch localmente a partir da `main` e publique:
+```powershell
+git checkout -b work
+git push -u origin work
+```
+
+### Se a branch `work` já existir
 ```powershell
 git checkout work
 git push -u origin work
