@@ -1,4 +1,4 @@
-# Portal de Alertas – Remessas
+# Portal de Remessas
 
 Sistema visual para monitorar clientes sem remessa.
 
@@ -16,3 +16,8 @@ Sistema visual para monitorar clientes sem remessa.
 - Fluxo de cancelamento com reemissão e redirecionamento de carga.
 
 Hospedado via GitHub Pages.
+
+
+## Publicação no GitHub Pages
+- O link do GitHub Pages de projeto sempre usa o nome do repositório, por exemplo: `https://<usuario>.github.io/portal-alertas-remessa/`.
+- Se você quiser que o link final seja `/portal-de-remessas/`, renomeie o repositório no GitHub para `portal-de-remessas` e ajuste **Settings → Pages** para publicar a branch principal.
