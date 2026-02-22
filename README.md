@@ -34,4 +34,5 @@ Checklist:
 - O workflow de Pages foi ampliado para `main`, `master` e `work` para evitar deploy no branch errado.
 - Se ainda aparecer versão antiga, faça `Ctrl+F5`/limpeza de cache e reimporte o `.xlsx`.
 - Tabela com paginação para melhorar desempenho em arquivos grandes.
+- Importação com tratamento de codificação (UTF-8/Windows-1252) para evitar caracteres quebrados.
 

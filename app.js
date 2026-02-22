@@ -1,4 +1,4 @@
-const STORAGE_KEY = "portal-remessas.v4";
+const STORAGE_KEY = "portal-remessas.v5";
 const PAGE_SIZE = 250;
 
 const fileInput = document.getElementById("fileInput");
@@ -45,15 +45,23 @@ function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
 }
 
-function safeText(value) {
+function normalizeKey(value) {
   return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function safeText(value) {
+  return String(value ?? "")
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
     .replace(/�+/g, "")
     .trim();
 }
 
 function cleanupLegacyStorage() {
-  ["portal-remessas.v2", "portal-remessas.v3", "remessas", "dados", "portalData"].forEach((key) => {
+  ["portal-remessas.v2", "portal-remessas.v3", "portal-remessas.v4", "remessas", "dados", "portalData"].forEach((key) => {
     if (key !== STORAGE_KEY) localStorage.removeItem(key);
   });
 
@@ -74,7 +82,8 @@ function cleanupLegacyStorage() {
 function excelDateToJS(value) {
   if (typeof value !== "number") return null;
   const utcDays = Math.floor(value - 25569);
-  return new Date(utcDays * 86400 * 1000);
+  const d = new Date(utcDays * 86400 * 1000);
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 function parseDate(value) {
@@ -82,7 +91,7 @@ function parseDate(value) {
   if (value instanceof Date) return value;
 
   const excelDate = excelDateToJS(value);
-  if (excelDate && !Number.isNaN(excelDate.getTime())) return excelDate;
+  if (excelDate) return excelDate;
 
   const s = safeText(value);
   const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -92,18 +101,30 @@ function parseDate(value) {
   return Number.isNaN(iso.getTime()) ? null : iso;
 }
 
+function getField(row, aliases) {
+  const map = {};
+  Object.keys(row || {}).forEach((k) => {
+    map[normalizeKey(k)] = row[k];
+  });
+
+  for (const alias of aliases) {
+    const hit = map[normalizeKey(alias)];
+    if (hit !== undefined && hit !== null && String(hit).trim() !== "") return hit;
+  }
+  return "";
+}
+
 function normalizeRow(row) {
-  const cnpj = safeText(row.CNPJ || row.cnpj || row["CNPJ CLIENTE"]);
-  const cliente = safeText(row.Cliente || row.CLIENTE || row.cliente);
-  const contrato = safeText(row.Contrato || row.CONTRATO || row.contrato || "Sem contrato");
-  const material = safeText(row.Material || row.MATERIAL || row.material);
-
+  const cnpj = safeText(getField(row, ["CNPJ", "CNPJ CLIENTE", "DOC CLIENTE", "Documento"]))
+    .replace(/[^0-9]/g, "") || "";
+  const cliente = safeText(getField(row, ["Cliente", "CLIENTE", "Nome Cliente"]));
+  const contrato = safeText(getField(row, ["Contrato", "CONTRATO", "N Contrato", "Numero Contrato"])) || "Sem contrato";
+  const material = safeText(getField(row, ["Material", "Produto", "MATERIAL"]));
   const dataRemessa = parseDate(
-    row["Data da remessa"] || row["DATA DA REMESSA"] || row.dataRemessa || row.data || row["Ultima Remessa"] || row["Última remessa"]
+    getField(row, ["Data da remessa", "DATA DA REMESSA", "Data Remessa", "Ultima Remessa", "Última remessa"])
   );
-
-  const volume = Number(row["Volume da obra"] || row.volume_obra || row.Volume || row.Quantidade || row["Volume Obra"] || 0) || 0;
-  const obra = safeText(row["Nome da obra"] || row.nome_obra || row.Obra || row["Nome Obra"]);
+  const volume = Number(getField(row, ["Volume da obra", "Volume Obra", "Volume", "Quantidade", "Qtd"])) || 0;
+  const obra = safeText(getField(row, ["Nome da obra", "Nome Obra", "Obra", "Empreendimento"]));
 
   return {
     cnpj,
@@ -285,7 +306,7 @@ function drawChart(rows) {
 
 function getRawByCurrentFilters() {
   return raw.filter((r) => {
-    const d = parseDate(r["Data da remessa"] || r["DATA DA REMESSA"] || r.dataRemessa || r.data || r["Ultima Remessa"] || r["Última remessa"]);
+    const d = parseDate(getField(r, ["Data da remessa", "DATA DA REMESSA", "Data Remessa", "Ultima Remessa", "Última remessa"]));
     if (!d) return false;
     const y = filterYear.value;
     const m = Number(filterMonth.value);
@@ -300,6 +321,20 @@ function refresh() {
   renderSummary(currentFiltered);
   renderTable(currentFiltered);
   drawChart(getRawByCurrentFilters());
+}
+
+function decodeTextFile(buffer) {
+  const utf8 = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+  const badUtf = (utf8.match(/�/g) || []).length;
+
+  if (badUtf > 20) {
+    try {
+      return new TextDecoder("windows-1252", { fatal: false }).decode(buffer);
+    } catch {
+      return utf8;
+    }
+  }
+  return utf8;
 }
 
 function parseCSV(text) {
@@ -319,19 +354,39 @@ function parseCSV(text) {
   });
 }
 
+function pickBestSheet(workbook) {
+  let best = workbook.SheetNames[0];
+  let maxRows = -1;
+
+  workbook.SheetNames.forEach((name) => {
+    const ws = workbook.Sheets[name];
+    const ref = ws["!ref"];
+    if (!ref) return;
+    const range = XLSX.utils.decode_range(ref);
+    const rows = range.e.r - range.s.r;
+    if (rows > maxRows) {
+      maxRows = rows;
+      best = name;
+    }
+  });
+
+  return best;
+}
+
 async function parseSpreadsheet(file) {
   const ext = file.name.toLowerCase().split(".").pop();
+  const buffer = await file.arrayBuffer();
 
-  if (ext === "csv") return parseCSV(await file.text());
-  if (ext === "json") return JSON.parse(await file.text());
+  if (ext === "csv") return parseCSV(decodeTextFile(buffer));
+  if (ext === "json") return JSON.parse(decodeTextFile(buffer));
 
   if (ext === "xlsx" || ext === "xls") {
     if (!window.XLSX) throw new Error("Biblioteca XLSX não carregada.");
 
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: "array", cellDates: true, raw: false });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    return XLSX.utils.sheet_to_json(ws, { defval: "" });
+    const wb = XLSX.read(buffer, { type: "array", cellDates: true, raw: false, codepage: 65001 });
+    const sheetName = pickBestSheet(wb);
+    const ws = wb.Sheets[sheetName];
+    return XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
   }
 
   throw new Error("Formato não suportado.");
