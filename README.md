@@ -55,6 +55,35 @@ git checkout work
 git push -u origin work
 ```
 
+### Se aparecer `fatal: destination path '\.' already exists and is not an empty directory`
+Esse erro significa que o repositório **já está clonado** na pasta atual. Nesse caso, **não rode `git clone` novamente**.
+
+Use este fluxo:
+```powershell
+cd "C:\SISTEMAS MARIANA\portal-alertas-remessa"
+git status
+git checkout work
+git pull origin work
+```
+
+### Fluxo final para publicar no GitHub Pages (quando já existe clone)
+1. Atualize `work`:
+   ```powershell
+   git checkout work
+   git pull origin work
+   ```
+2. No GitHub, abra o PR `work -> main`.
+3. Se o PR mostrar conflito, sincronize a branch local e envie:
+   ```powershell
+   git checkout work
+   git fetch origin
+   git merge origin/main
+   git add .
+   git commit -m "Resolve conflitos da work com main"
+   git push origin work
+   ```
+4. Faça o merge do PR e aguarde 1 a 3 minutos para o Pages atualizar.
+
 ## Próximos passos (sugestão de evolução)
 - Cadastro digital de pedidos (cliente, material, quantidade, entrega).
 - Agendamento automático de entregas com ordem de carga para motorista.
