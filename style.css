@@ -106,3 +106,13 @@ th { color: var(--accent); background: #111a31; position: sticky; top: 0; }
   .cards { grid-template-columns: 1fr 1fr; }
   .panel-head { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
+
+
+.build-tag {
+  max-width: 1320px;
+  margin: 8px auto 16px;
+  padding: 0 20px;
+  color: var(--muted);
+  font-size: 12px;
+  opacity: 0.8;
+}

@@ -26,6 +26,30 @@ const thMaterial = document.getElementById("thMaterial");
 let raw = readJSON(STORAGE_KEY, []);
 let showMaterial = false;
 
+
+function cleanupLegacyStorage() {
+  const legacyKeys = ["portal-remessas.v2", "remessas", "dados", "portalData"];
+  legacyKeys.forEach((key) => {
+    if (key !== STORAGE_KEY) localStorage.removeItem(key);
+  });
+
+  if (!Array.isArray(raw)) {
+    raw = [];
+    return;
+  }
+
+  const looksCorrupted = raw.some((row) => {
+    const text = JSON.stringify(row || {});
+    return text.includes("�") || text.includes("PK\u0003\u0004") || text.length > 20000;
+  });
+
+  if (looksCorrupted) {
+    raw = [];
+    save();
+    importInfo.textContent = "Dados antigos corrompidos foram limpos. Importe o XLSX novamente.";
+  }
+}
+
 function readJSON(key, fallback) {
   try {
     return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
@@ -299,7 +323,8 @@ btnLoadDemo.addEventListener("click", async () => {
   save();
   filterYear.innerHTML = "";
   importInfo.textContent = "Demo carregada com sucesso.";
-  refresh();
+  cleanupLegacyStorage();
+refresh();
 });
 
 btnImport.addEventListener("click", async () => {
@@ -311,7 +336,8 @@ btnImport.addEventListener("click", async () => {
     save();
     filterYear.innerHTML = "";
     importInfo.textContent = `Arquivo carregado: ${file.name} (${raw.length} linhas)`;
-    refresh();
+    cleanupLegacyStorage();
+refresh();
   } catch (error) {
     importInfo.textContent = "Falha ao importar. Verifique o formato e os cabeçalhos.";
     alert("Não foi possível importar o arquivo.");
@@ -323,7 +349,8 @@ btnClear.addEventListener("click", () => {
   save();
   filterYear.innerHTML = "";
   importInfo.textContent = "Dados excluídos.";
-  refresh();
+  cleanupLegacyStorage();
+refresh();
 });
 
 filterYear.addEventListener("change", refresh);
@@ -332,7 +359,9 @@ btnUpdateChart.addEventListener("click", refresh);
 
 toggleMaterial.addEventListener("change", (e) => {
   showMaterial = e.target.checked;
-  refresh();
+  cleanupLegacyStorage();
+refresh();
 });
 
+cleanupLegacyStorage();
 refresh();

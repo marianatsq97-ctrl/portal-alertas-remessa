@@ -29,3 +29,8 @@ Checklist:
 3. Faça um novo push para `main` (ou rode manualmente em **Actions → Deploy GitHub Pages → Run workflow**).
 4. Aguarde o job `deploy` finalizar e atualize a página.
 
+## Se o link abrir versão antiga
+- Este projeto agora força atualização com versão nos assets (`?v=20260222b`).
+- O workflow de Pages foi ampliado para `main`, `master` e `work` para evitar deploy no branch errado.
+- Se ainda aparecer versão antiga, faça `Ctrl+F5`/limpeza de cache e reimporte o `.xlsx`.
+
