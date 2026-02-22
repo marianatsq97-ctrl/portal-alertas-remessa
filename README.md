@@ -1,22 +1,24 @@
-# Foco Já • Planejamento e Execução com Integrações
+# Portal de Alertas – Remessas
 
-Aplicativo web para organizar atividades de **trabalho, pessoal e outros** para quem se sente perdido e sobrecarregado.
+Aplicativo web para acompanhar clientes/contratos sem remessa e agir com prioridade.
 
-## O que ele resolve
-- reduz paralisia por excesso de opções;
-- transforma tarefas em próximo passo claro;
-- limita o plano diário em até 3 focos;
-- acelera execução com ações de 1 clique.
+## Melhorias implementadas
+- Novas faixas de alerta:
+  - **OK**: 0 a 7 dias;
+  - **Atenção**: 8 a 14 dias;
+  - **Atenção grave**: 15 a 21 dias;
+  - **Plano de ação**: acima de 21 dias.
+- Exibição em **dias/meses/anos** quando ultrapassa 31 e 365 dias.
+- Ordenação por ritmo da última remessa (maior tempo sem remessa primeiro).
+- Chave de vínculo por **CNPJ + contrato**, agregando produtos.
+- Inclusão de **nome da obra** e **volume da obra** no detalhamento.
+- Opção para ocultar/mostrar coluna de materiais/produtos.
+- Filtro de ano/mês que atualiza automaticamente cards, tabela e gráfico.
+- Logo Areia Ana exibida no cabeçalho.
 
-## Integrações disponíveis (modo GitHub Pages)
-- **Google Agenda**: cria evento pronto via link de template;
-- **ClickUp**: envia tarefa para uma lista usando Token pessoal + List ID;
-- **Notas do celular**: envia anotação via compartilhamento nativo (quando disponível) ou baixa `.txt`;
-- **Outros sistemas**: atalho para URL externa configurável.
+## Como usar
+1. Abra `index.html`.
+2. Clique em **Carregar demo** para testar ou importe um arquivo `.csv`/`.json`.
+3. Use filtros de ano e mês para analisar períodos.
 
-> Como o app é estático (GitHub), as configurações ficam no `localStorage` do navegador.
-
-## Como publicar no GitHub
-1. Suba estes arquivos no repositório.
-2. Ative GitHub Pages (branch principal / root).
-3. Abra a URL publicada e configure suas integrações no painel do app.
+> Compatível com GitHub Pages (site estático).

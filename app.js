@@ -1,47 +1,28 @@
-const STORAGE_KEY = "focoja.tasks.v2";
-const INTEGRATIONS_KEY = "focoja.integrations.v1";
+const STORAGE_KEY = "portal-remessas.v2";
 
-const taskForm = document.getElementById("taskForm");
-const taskTitle = document.getElementById("taskTitle");
-const taskArea = document.getElementById("taskArea");
-const taskEnergy = document.getElementById("taskEnergy");
-const taskPriority = document.getElementById("taskPriority");
-const taskMinutes = document.getElementById("taskMinutes");
-const taskNextStep = document.getElementById("taskNextStep");
+const fileInput = document.getElementById("fileInput");
+const btnImport = document.getElementById("btnImport");
+const btnLoadDemo = document.getElementById("btnLoadDemo");
+const btnClear = document.getElementById("btnClear");
+const filterYear = document.getElementById("filterYear");
+const filterMonth = document.getElementById("filterMonth");
+const toggleMaterial = document.getElementById("toggleMaterial");
 
-const filterArea = document.getElementById("filterArea");
-const filterPriority = document.getElementById("filterPriority");
-const todayList = document.getElementById("todayList");
-const taskList = document.getElementById("taskList");
+const okCount = document.getElementById("okCount");
+const warnCount = document.getElementById("warnCount");
+const graveCount = document.getElementById("graveCount");
+const actionCount = document.getElementById("actionCount");
 
-const clickupToken = document.getElementById("clickupToken");
-const clickupListId = document.getElementById("clickupListId");
-const googleCalendarEmail = document.getElementById("googleCalendarEmail");
-const defaultStartTime = document.getElementById("defaultStartTime");
-const customIntegrationUrl = document.getElementById("customIntegrationUrl");
-const btnSaveIntegrations = document.getElementById("btnSaveIntegrations");
-const btnOpenGoogle = document.getElementById("btnOpenGoogle");
-const btnOpenClickUp = document.getElementById("btnOpenClickUp");
-const btnOpenCustom = document.getElementById("btnOpenCustom");
+const kpiContratos = document.getElementById("kpiContratos");
+const kpiClientes = document.getElementById("kpiClientes");
+const kpiVolume = document.getElementById("kpiVolume");
 
-const executionDialog = document.getElementById("executionDialog");
-const executionHint = document.getElementById("executionHint");
-const executionContent = document.getElementById("executionContent");
-const btnStartExecution = document.getElementById("btnStartExecution");
-const btnDoneExecution = document.getElementById("btnDoneExecution");
-const btnSkipExecution = document.getElementById("btnSkipExecution");
-const btnCloseExecution = document.getElementById("btnCloseExecution");
-const btnClearDay = document.getElementById("btnClearDay");
+const tbody = document.getElementById("tbody");
+const chart = document.getElementById("chart");
+const thMaterial = document.getElementById("thMaterial");
 
-let tasks = readJSON(STORAGE_KEY, []);
-let integrations = readJSON(INTEGRATIONS_KEY, {
-  clickupToken: "",
-  clickupListId: "",
-  googleCalendarEmail: "",
-  defaultStartTime: "09:00",
-  customIntegrationUrl: "",
-});
-let executionPointer = 0;
+let raw = readJSON(STORAGE_KEY, []);
+let showMaterial = false;
 
 function readJSON(key, fallback) {
   try {
@@ -51,335 +32,270 @@ function readJSON(key, fallback) {
   }
 }
 
-function saveTasks() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(raw));
 }
 
-function saveIntegrations() {
-  integrations = {
-    clickupToken: clickupToken.value.trim(),
-    clickupListId: clickupListId.value.trim(),
-    googleCalendarEmail: googleCalendarEmail.value.trim(),
-    defaultStartTime: defaultStartTime.value,
-    customIntegrationUrl: customIntegrationUrl.value.trim(),
+function normalizeRow(row) {
+  const cnpj = String(row.CNPJ || row.cnpj || "").trim();
+  const cliente = String(row.Cliente || row.CLIENTE || row.cliente || "").trim();
+  const contrato = String(row.Contrato || row.CONTRATO || row.contrato || "Sem contrato").trim();
+  const material = String(row.Material || row.MATERIAL || row.material || "").trim();
+  const dataRemessa = parseDate(row["Data da remessa"] || row["DATA DA REMESSA"] || row.dataRemessa || row.data || "");
+  const volume = Number(row["Volume da obra"] || row.volume_obra || row.Volume || row.Quantidade || 0) || 0;
+  const obra = String(row["Nome da obra"] || row.nome_obra || row.Obra || "").trim();
+
+  return {
+    cnpj,
+    cliente,
+    keyCliente: cnpj || cliente || "sem-chave",
+    contrato,
+    material,
+    dataRemessa,
+    volume,
+    obra,
   };
-  localStorage.setItem(INTEGRATIONS_KEY, JSON.stringify(integrations));
-  alert("Integrações salvas no navegador.");
 }
 
-function loadIntegrationsForm() {
-  clickupToken.value = integrations.clickupToken || "";
-  clickupListId.value = integrations.clickupListId || "";
-  googleCalendarEmail.value = integrations.googleCalendarEmail || "";
-  defaultStartTime.value = integrations.defaultStartTime || "09:00";
-  customIntegrationUrl.value = integrations.customIntegrationUrl || "";
+function parseDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  const s = String(value).trim();
+  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (br) return new Date(Number(br[3]), Number(br[2]) - 1, Number(br[1]));
+  const iso = new Date(s);
+  return Number.isNaN(iso.getTime()) ? null : iso;
 }
 
-function makeId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+function daysWithout(date) {
+  if (!date) return 9999;
+  const ms = Date.now() - date.getTime();
+  return Math.max(0, Math.floor(ms / 86400000));
 }
 
-function createTask(payload) {
-  tasks.unshift({
-    id: makeId(),
-    title: payload.title,
-    area: payload.area,
-    energy: payload.energy,
-    priority: payload.priority,
-    minutes: Number(payload.minutes),
-    nextStep: payload.nextStep,
-    selectedToday: payload.priority === "Agora",
-    done: false,
-    createdAt: new Date().toISOString(),
-  });
-  normalizeTodaySelection();
-  saveTasks();
-  render();
+function statusByDays(days) {
+  if (days <= 7) return { key: "ok", label: "OK" };
+  if (days <= 14) return { key: "warn", label: "Atenção" };
+  if (days <= 21) return { key: "grave", label: "Atenção grave" };
+  return { key: "action", label: "Plano de ação" };
 }
 
-function normalizeTodaySelection() {
-  const selected = tasks.filter((task) => task.selectedToday && !task.done);
-  if (selected.length <= 3) return;
-
-  selected
-    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    .slice(3)
-    .forEach((task) => {
-      task.selectedToday = false;
-    });
+function prettyAge(days) {
+  if (days > 365) {
+    const years = (days / 365).toFixed(1);
+    return `${days} dias (${years} anos)`;
+  }
+  if (days > 31) {
+    const months = (days / 30).toFixed(1);
+    return `${days} dias (${months} meses)`;
+  }
+  return `${days} dias`;
 }
 
-function toggleToday(id) {
-  const task = tasks.find((item) => item.id === id);
-  if (!task || task.done) return;
+function aggregate(rows) {
+  const map = new Map();
 
-  if (!task.selectedToday) {
-    const count = tasks.filter((item) => item.selectedToday && !item.done).length;
-    if (count >= 3) {
-      alert("Você já definiu 3 focos para hoje.");
+  rows.map(normalizeRow).forEach((r) => {
+    const key = `${r.keyCliente}::${r.contrato}`;
+    const prev = map.get(key);
+
+    if (!prev) {
+      map.set(key, {
+        key,
+        cnpj: r.cnpj,
+        cliente: r.cliente,
+        contrato: r.contrato,
+        obra: r.obra,
+        volume: r.volume,
+        lastDate: r.dataRemessa,
+        materials: r.material ? [r.material] : [],
+      });
       return;
     }
-  }
 
-  task.selectedToday = !task.selectedToday;
-  saveTasks();
-  render();
+    prev.volume += r.volume;
+    if (r.obra && !prev.obra) prev.obra = r.obra;
+    if (!prev.lastDate || (r.dataRemessa && r.dataRemessa > prev.lastDate)) prev.lastDate = r.dataRemessa;
+    if (r.material && !prev.materials.includes(r.material)) prev.materials.push(r.material);
+  });
+
+  return [...map.values()].map((item) => {
+    const days = daysWithout(item.lastDate);
+    return { ...item, days, status: statusByDays(days) };
+  });
 }
 
-function markDone(id, done = true) {
-  const task = tasks.find((item) => item.id === id);
-  if (!task) return;
-  task.done = done;
-  if (done) task.selectedToday = false;
-  saveTasks();
-  render();
+function initFilters(items) {
+  const years = [...new Set(items.map((i) => (i.lastDate ? i.lastDate.getFullYear() : null)).filter(Boolean))].sort((a, b) => b - a);
+
+  filterYear.innerHTML = '<option value="all">Todos</option>' + years.map((y) => `<option value="${y}">${y}</option>`).join("");
+  const months = ["Todos", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+  filterMonth.innerHTML = months.map((m, i) => `<option value="${i - 1}">${m}</option>`).join("");
 }
 
-function removeTask(id) {
-  tasks = tasks.filter((item) => item.id !== id);
-  saveTasks();
-  render();
+function filtered(items) {
+  const y = filterYear.value;
+  const m = Number(filterMonth.value);
+
+  return items.filter((item) => {
+    if (!item.lastDate) return y === "all" && m === -1;
+    const okYear = y === "all" || item.lastDate.getFullYear() === Number(y);
+    const okMonth = m === -1 || item.lastDate.getMonth() === m;
+    return okYear && okMonth;
+  });
 }
 
-function buildGoogleLink(task) {
-  const now = new Date();
-  const [hour, minute] = (integrations.defaultStartTime || "09:00").split(":").map(Number);
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0);
-  const end = new Date(start.getTime() + task.minutes * 60000);
+function renderSummary(items) {
+  const counts = { ok: 0, warn: 0, grave: 0, action: 0 };
+  items.forEach((i) => counts[i.status.key]++);
 
-  const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const text = encodeURIComponent(task.title);
-  const details = encodeURIComponent(`Próxima ação: ${task.nextStep}\nÁrea: ${task.area}`);
-  const dates = `${fmt(start)}/${fmt(end)}`;
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&dates=${dates}`;
+  okCount.textContent = counts.ok;
+  warnCount.textContent = counts.warn;
+  graveCount.textContent = counts.grave;
+  actionCount.textContent = counts.action;
+
+  kpiContratos.textContent = items.length;
+  kpiClientes.textContent = new Set(items.map((i) => i.cnpj || i.cliente)).size;
+  kpiVolume.textContent = items.reduce((acc, i) => acc + i.volume, 0).toLocaleString("pt-BR");
 }
 
-async function syncClickUp(task) {
-  if (!integrations.clickupToken || !integrations.clickupListId) {
-    alert("Informe Token e List ID do ClickUp em Integrações.");
+function renderTable(items) {
+  thMaterial.style.display = showMaterial ? "table-cell" : "none";
+  tbody.innerHTML = "";
+
+  const sorted = [...items].sort((a, b) => b.days - a.days);
+
+  sorted.forEach((item) => {
+    const tr = document.createElement("tr");
+    const displayClient = item.cnpj ? `${item.cnpj} • ${item.cliente || "Sem nome"}` : item.cliente || "Sem nome";
+    tr.innerHTML = `
+      <td>${displayClient}</td>
+      <td>${item.contrato}</td>
+      <td>${item.obra || "-"}</td>
+      <td>${item.volume.toLocaleString("pt-BR")}</td>
+      <td>${item.lastDate ? item.lastDate.toLocaleDateString("pt-BR") : "Sem data"}</td>
+      <td>${prettyAge(item.days)}</td>
+      <td><span class="badge ${item.status.key}">${item.status.label}</span></td>
+      ${showMaterial ? `<td>${item.materials.join(", ") || "-"}</td>` : ""}
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function monthSeries(rows) {
+  const agg = {};
+  rows.map(normalizeRow).forEach((r) => {
+    if (!r.dataRemessa) return;
+    const key = `${r.dataRemessa.getFullYear()}-${String(r.dataRemessa.getMonth() + 1).padStart(2, "0")}`;
+    if (!agg[key]) agg[key] = { ok: 0, warn: 0, grave: 0, action: 0 };
+    agg[key][statusByDays(daysWithout(r.dataRemessa)).key] += 1;
+  });
+  return Object.entries(agg)
+    .sort(([a], [b]) => (a > b ? 1 : -1))
+    .map(([label, data]) => ({ label, ...data }));
+}
+
+function drawChart(rows) {
+  const ctx = chart.getContext("2d");
+  const w = chart.width;
+  const h = chart.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const series = monthSeries(rows);
+  if (!series.length) {
+    ctx.fillStyle = "#a6b0d6";
+    ctx.font = "16px sans-serif";
+    ctx.fillText("Sem dados para o gráfico", 20, 40);
     return;
   }
 
-  try {
-    const response = await fetch(`https://api.clickup.com/api/v2/list/${integrations.clickupListId}/task`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: integrations.clickupToken,
-      },
-      body: JSON.stringify({
-        name: task.title,
-        description: `Próxima ação: ${task.nextStep}\nÁrea: ${task.area}\nPrioridade: ${task.priority}`,
-        due_date: Date.now() + task.minutes * 60000,
-      }),
+  const max = Math.max(...series.map((s) => s.ok + s.warn + s.grave + s.action), 1);
+  const barW = Math.max(36, (w - 80) / series.length - 12);
+
+  series.forEach((s, idx) => {
+    const x = 50 + idx * ((w - 80) / series.length);
+    let y = h - 40;
+    [
+      ["ok", "#39d98a"],
+      ["warn", "#ffd84d"],
+      ["grave", "#ff9f43"],
+      ["action", "#ff5b6e"],
+    ].forEach(([k, color]) => {
+      const value = s[k];
+      if (!value) return;
+      const bh = ((h - 90) * value) / max;
+      y -= bh;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, barW, bh);
     });
 
-    if (!response.ok) {
-      throw new Error("Falha na API do ClickUp.");
-    }
-
-    const result = await response.json();
-    if (result.url) {
-      window.open(result.url, "_blank");
-    }
-    alert("Atividade enviada para o ClickUp.");
-  } catch {
-    alert("Não foi possível sincronizar com ClickUp. Verifique token/lista e permissões.");
-  }
-}
-
-function syncNotes(task) {
-  const text = `# ${task.title}\n\nPróxima ação: ${task.nextStep}\nÁrea: ${task.area}\nPrioridade: ${task.priority}\nTempo: ${task.minutes} minutos`;
-
-  if (navigator.share) {
-    navigator
-      .share({
-        title: "Anotação Foco Já",
-        text,
-      })
-      .catch(() => {});
-    return;
-  }
-
-  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `nota-${task.title.toLowerCase().replace(/\s+/g, "-")}.txt`;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function taskTemplate(task, compact = false) {
-  const pr = task.priority.toLowerCase();
-  return `
-    <li class="item ${task.done ? "done" : ""}">
-      <strong>${task.title}</strong>
-      <p class="meta">Próxima ação: ${task.nextStep}</p>
-      <div class="badges">
-        <span class="badge">${task.area}</span>
-        <span class="badge ${pr}">${task.priority}</span>
-        <span class="badge">Energia ${task.energy}</span>
-        <span class="badge">${task.minutes} min</span>
-      </div>
-      <div class="actions">
-        ${
-          compact
-            ? ""
-            : `<button class="btn btn-ghost" data-action="today" data-id="${task.id}">${
-                task.selectedToday ? "Remover do dia" : "Planejar hoje"
-              }</button>
-               <button class="btn btn-ghost" data-action="done" data-id="${task.id}">${
-                 task.done ? "Reabrir" : "Concluir"
-               }</button>
-               <button class="btn btn-ghost" data-action="remove" data-id="${task.id}">Excluir</button>`
-        }
-        <button class="btn btn-ghost" data-action="google" data-id="${task.id}">Google Agenda</button>
-        <button class="btn btn-ghost" data-action="clickup" data-id="${task.id}">ClickUp</button>
-        <button class="btn btn-ghost" data-action="notes" data-id="${task.id}">Notas celular</button>
-      </div>
-    </li>
-  `;
-}
-
-function renderToday() {
-  const items = tasks.filter((task) => task.selectedToday && !task.done);
-  todayList.innerHTML = items.length
-    ? items.map((task) => taskTemplate(task, true)).join("")
-    : '<li class="item">Sem foco definido. Escolha até 3 tarefas abaixo.</li>';
-}
-
-function renderTasks() {
-  const area = filterArea.value;
-  const priority = filterPriority.value;
-
-  const filtered = tasks.filter((task) => {
-    const okArea = area === "Todas" || task.area === area;
-    const okPriority = priority === "Todas" || task.priority === priority;
-    return okArea && okPriority;
+    ctx.fillStyle = "#a6b0d6";
+    ctx.font = "12px sans-serif";
+    ctx.fillText(s.label, x, h - 16);
   });
-
-  taskList.innerHTML = filtered.length
-    ? filtered.map((task) => taskTemplate(task)).join("")
-    : '<li class="item">Nenhuma atividade para esse filtro.</li>';
 }
 
-function executionQueue() {
-  const order = { Agora: 0, Hoje: 1, Depois: 2 };
-  return tasks
-    .filter((task) => task.selectedToday && !task.done)
-    .sort((a, b) => order[a.priority] - order[b.priority]);
+function refresh() {
+  const items = aggregate(raw);
+  if (!filterYear.options.length) initFilters(items);
+  const view = filtered(items);
+
+  renderSummary(view);
+  renderTable(view);
+  drawChart(raw.filter((r) => {
+    const d = parseDate(r["Data da remessa"] || r["DATA DA REMESSA"] || r.dataRemessa || r.data || "");
+    if (!d) return false;
+    const y = filterYear.value;
+    const m = Number(filterMonth.value);
+    const okYear = y === "all" || d.getFullYear() === Number(y);
+    const okMonth = m === -1 || d.getMonth() === m;
+    return okYear && okMonth;
+  }));
 }
 
-function renderExecutionMode() {
-  const queue = executionQueue();
-  if (!queue.length) {
-    executionHint.textContent = "Sem atividade no plano de hoje.";
-    executionContent.innerHTML = "";
-    btnDoneExecution.dataset.id = "";
-    return;
-  }
-
-  if (executionPointer >= queue.length) executionPointer = 0;
-  const task = queue[executionPointer];
-
-  executionHint.textContent = `Foco ${executionPointer + 1}/${queue.length}`;
-  executionContent.innerHTML = `
-    <div class="execution-focus">
-      <h3>${task.title}</h3>
-      <p><strong>Próxima ação:</strong> ${task.nextStep}</p>
-      <p class="meta">Faça apenas essa tarefa por ${task.minutes} minutos.</p>
-    </div>
-  `;
-  btnDoneExecution.dataset.id = task.id;
-}
-
-function render() {
-  renderToday();
-  renderTasks();
-  renderExecutionMode();
-}
-
-taskForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  createTask({
-    title: taskTitle.value.trim(),
-    area: taskArea.value,
-    energy: taskEnergy.value,
-    priority: taskPriority.value,
-    minutes: taskMinutes.value,
-    nextStep: taskNextStep.value.trim(),
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map((h) => h.trim());
+  return lines.slice(1).map((line) => {
+    const cols = line.split(",");
+    const obj = {};
+    headers.forEach((h, i) => (obj[h] = (cols[i] || "").trim()));
+    return obj;
   });
-  taskForm.reset();
-  taskMinutes.value = 25;
-  taskTitle.focus();
-});
-
-[filterArea, filterPriority].forEach((el) => el.addEventListener("change", renderTasks));
-
-function getTaskByButton(event) {
-  const target = event.target;
-  if (!(target instanceof HTMLButtonElement)) return null;
-  const id = target.dataset.id;
-  const action = target.dataset.action;
-  const task = tasks.find((item) => item.id === id);
-  return { target, id, action, task };
 }
 
-[todayList, taskList].forEach((listEl) => {
-  listEl.addEventListener("click", async (event) => {
-    const ctx = getTaskByButton(event);
-    if (!ctx || !ctx.task) return;
-
-    if (ctx.action === "today") toggleToday(ctx.id);
-    if (ctx.action === "done") markDone(ctx.id, !ctx.task.done);
-    if (ctx.action === "remove") removeTask(ctx.id);
-    if (ctx.action === "google") window.open(buildGoogleLink(ctx.task), "_blank");
-    if (ctx.action === "clickup") await syncClickUp(ctx.task);
-    if (ctx.action === "notes") syncNotes(ctx.task);
-  });
+btnLoadDemo.addEventListener("click", async () => {
+  const res = await fetch("data/demo.json");
+  raw = await res.json();
+  save();
+  filterYear.innerHTML = "";
+  refresh();
 });
 
-btnSaveIntegrations.addEventListener("click", saveIntegrations);
-btnOpenGoogle.addEventListener("click", () => window.open("https://calendar.google.com", "_blank"));
-btnOpenClickUp.addEventListener("click", () => window.open("https://app.clickup.com", "_blank"));
-btnOpenCustom.addEventListener("click", () => {
-  if (!customIntegrationUrl.value.trim()) {
-    alert("Informe um link externo primeiro.");
-    return;
-  }
-  window.open(customIntegrationUrl.value.trim(), "_blank");
+btnImport.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  if (!file) return alert("Selecione um arquivo .csv ou .json.");
+
+  const text = await file.text();
+  raw = file.name.toLowerCase().endsWith(".json") ? JSON.parse(text) : parseCSV(text);
+  save();
+  filterYear.innerHTML = "";
+  refresh();
 });
 
-btnStartExecution.addEventListener("click", () => {
-  executionPointer = 0;
-  renderExecutionMode();
-  executionDialog.showModal();
+btnClear.addEventListener("click", () => {
+  raw = [];
+  save();
+  filterYear.innerHTML = "";
+  refresh();
 });
 
-btnDoneExecution.addEventListener("click", () => {
-  const id = btnDoneExecution.dataset.id;
-  if (!id) return;
-  markDone(id, true);
-  renderExecutionMode();
+filterYear.addEventListener("change", refresh);
+filterMonth.addEventListener("change", refresh);
+toggleMaterial.addEventListener("change", (e) => {
+  showMaterial = e.target.checked;
+  refresh();
 });
 
-btnSkipExecution.addEventListener("click", () => {
-  const queue = executionQueue();
-  if (!queue.length) return;
-  executionPointer = (executionPointer + 1) % queue.length;
-  renderExecutionMode();
-});
-
-btnCloseExecution.addEventListener("click", () => executionDialog.close());
-
-btnClearDay.addEventListener("click", () => {
-  tasks.forEach((task) => {
-    task.selectedToday = false;
-  });
-  saveTasks();
-  render();
-});
-
-loadIntegrationsForm();
-render();
+refresh();

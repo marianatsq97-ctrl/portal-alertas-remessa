@@ -3,156 +3,95 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Foco Já • Execução com Integrações</title>
+    <title>Portal de Alertas – Remessas</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header class="hero">
-      <h1>Foco Já</h1>
-      <p>
-        Um organizador para quem está sobrecarregado: capture, escolha o próximo passo e execute sem
-        ficar pensando demais.
-      </p>
-      <div class="hero-actions">
-        <button id="btnStartExecution" class="btn btn-primary">Modo executar</button>
-        <button id="btnClearDay" class="btn btn-ghost">Limpar plano do dia</button>
-      </div>
-    </header>
-
-    <main class="layout">
-      <section class="card">
-        <h2>1) Captura rápida</h2>
-        <form id="taskForm" class="stack">
-          <label>
-            Atividade
-            <input id="taskTitle" required placeholder="Ex: preparar reunião com cliente" />
-          </label>
-
-          <div class="grid-2">
-            <label>
-              Área
-              <select id="taskArea">
-                <option value="Trabalho">Trabalho</option>
-                <option value="Pessoal">Pessoal</option>
-                <option value="Estudos">Estudos</option>
-                <option value="Outros">Outros</option>
-              </select>
-            </label>
-            <label>
-              Prioridade
-              <select id="taskPriority">
-                <option value="Agora">Agora</option>
-                <option value="Hoje">Hoje</option>
-                <option value="Depois">Depois</option>
-              </select>
-            </label>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <img src="logo-areia-ana.png" alt="Logo Areia Ana" />
+          <div>
+            <h1>Portal de Alertas – Remessas</h1>
+            <p>Priorize clientes sem remessa e aja no tempo certo.</p>
           </div>
+        </div>
+      </header>
 
-          <div class="grid-2">
+      <section class="panel">
+        <details>
+          <summary>Importar / atualizar dados</summary>
+          <div class="import-grid">
             <label>
-              Energia
-              <select id="taskEnergy">
-                <option value="Baixa">Baixa</option>
-                <option value="Média">Média</option>
-                <option value="Alta">Alta</option>
-              </select>
+              Arquivo CSV ou JSON
+              <input id="fileInput" type="file" accept=".csv,.json" />
             </label>
-            <label>
-              Duração (min)
-              <input id="taskMinutes" type="number" value="25" min="5" step="5" max="240" />
-            </label>
+            <div class="actions">
+              <button id="btnImport" class="btn btn-primary">Carregar arquivo</button>
+              <button id="btnLoadDemo" class="btn">Carregar demo</button>
+              <button id="btnClear" class="btn btn-danger">Excluir dados</button>
+            </div>
           </div>
+        </details>
 
-          <label>
-            Próxima ação concreta
-            <input id="taskNextStep" required placeholder="Ex: abrir ClickUp e comentar no card" />
-          </label>
-
-          <button type="submit" class="btn btn-primary">Adicionar atividade</button>
-        </form>
-      </section>
-
-      <section class="card">
-        <h2>2) Planejamento diário (até 3 focos)</h2>
-        <p class="muted">Menos opções = mais execução.</p>
-        <ul id="todayList" class="list"></ul>
-      </section>
-
-      <section class="card">
-        <h2>3) Integrações (Google, ClickUp, Notas e outras)</h2>
-        <p class="muted">Conecte seus acessos e use sincronização de 1 clique por atividade.</p>
-
-        <div class="grid-2">
-          <label>
-            Token do ClickUp
-            <input id="clickupToken" placeholder="pk_..." />
-          </label>
-          <label>
-            List ID do ClickUp
-            <input id="clickupListId" placeholder="Ex: 901234567890" />
-          </label>
-        </div>
-
-        <div class="grid-2">
-          <label>
-            E-mail Google Calendar
-            <input id="googleCalendarEmail" placeholder="voce@gmail.com" />
-          </label>
-          <label>
-            Horário padrão de início
-            <input id="defaultStartTime" type="time" value="09:00" />
-          </label>
-        </div>
-
-        <label>
-          Link de sistema externo (opcional)
-          <input id="customIntegrationUrl" placeholder="https://sua-ferramenta.com" />
-        </label>
-
-        <div class="hero-actions">
-          <button id="btnSaveIntegrations" class="btn btn-primary" type="button">Salvar integrações</button>
-          <button id="btnOpenGoogle" class="btn btn-ghost" type="button">Abrir Google Calendar</button>
-          <button id="btnOpenClickUp" class="btn btn-ghost" type="button">Abrir ClickUp</button>
-          <button id="btnOpenCustom" class="btn btn-ghost" type="button">Abrir sistema externo</button>
-        </div>
-        <small class="muted">
-          Projeto compatível com GitHub Pages: dados e credenciais ficam no seu navegador (localStorage).
-        </small>
-      </section>
-
-      <section class="card">
-        <h2>4) Todas as atividades</h2>
         <div class="filters">
-          <select id="filterArea">
-            <option value="Todas">Todas as áreas</option>
-            <option value="Trabalho">Trabalho</option>
-            <option value="Pessoal">Pessoal</option>
-            <option value="Estudos">Estudos</option>
-            <option value="Outros">Outros</option>
-          </select>
-          <select id="filterPriority">
-            <option value="Todas">Todas as prioridades</option>
-            <option value="Agora">Agora</option>
-            <option value="Hoje">Hoje</option>
-            <option value="Depois">Depois</option>
-          </select>
+          <label>
+            Ano
+            <select id="filterYear"></select>
+          </label>
+          <label>
+            Mês
+            <select id="filterMonth"></select>
+          </label>
+          <label class="checkbox">
+            <input id="toggleMaterial" type="checkbox" /> Mostrar material/produtos no detalhamento
+          </label>
         </div>
-        <ul id="taskList" class="list"></ul>
       </section>
-    </main>
 
-    <dialog id="executionDialog">
-      <article class="execution-box">
-        <h2>Modo executar</h2>
-        <p id="executionHint">Sem atividade no plano de hoje.</p>
-        <div id="executionContent"></div>
-        <div class="hero-actions">
-          <button id="btnDoneExecution" class="btn btn-primary">Concluir</button>
-          <button id="btnSkipExecution" class="btn btn-ghost">Pular</button>
-          <button id="btnCloseExecution" class="btn btn-ghost">Fechar</button>
+      <section class="panel">
+        <h2>Resumo Geral</h2>
+        <div class="kpis">
+          <article class="kpi"><span id="kpiContratos">0</span><small>Contratos exibidos</small></article>
+          <article class="kpi"><span id="kpiClientes">0</span><small>Clientes únicos (chave CNPJ)</small></article>
+          <article class="kpi"><span id="kpiVolume">0</span><small>Volume total da obra</small></article>
         </div>
-      </article>
-    </dialog>
+
+        <div class="cards">
+          <article class="status ok"><h3>OK</h3><strong id="okCount">0</strong><small>0 a 7 dias</small></article>
+          <article class="status warn"><h3>Atenção</h3><strong id="warnCount">0</strong><small>8 a 14 dias</small></article>
+          <article class="status grave"><h3>Atenção grave</h3><strong id="graveCount">0</strong><small>15 a 21 dias</small></article>
+          <article class="status action"><h3>Plano de ação</h3><strong id="actionCount">0</strong><small>> 21 dias</small></article>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Evolução por mês</h2>
+        <canvas id="chart" width="1200" height="340"></canvas>
+      </section>
+
+      <section class="panel">
+        <h2>Importação e Detalhamento</h2>
+        <p class="muted">Ordenado pelo ritmo da última remessa (maior dias sem remessa primeiro).</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>CNPJ / Cliente</th>
+                <th>Contrato</th>
+                <th>Nome da obra</th>
+                <th>Volume da obra</th>
+                <th>Última remessa</th>
+                <th>Dias sem remessa</th>
+                <th>Status</th>
+                <th id="thMaterial">Produtos</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
 
     <script src="app.js"></script>
   </body>
