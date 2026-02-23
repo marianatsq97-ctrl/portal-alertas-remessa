@@ -1,145 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portal de Alertas - Remessas</title>
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- XLSX (SheetJS) para ler Excel -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-  <!-- PapaParse para CSV (leve e ótimo) -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Alertas - Remessas</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <main class="dashboard">
-    <header class="topbar">
-      <div class="brand">
-        <img src="logo-areia-ana.png" alt="Logo Areia ANA" class="logo" />
-        <div class="title-block">
-          <h1>Portal de Alertas - Remessas</h1>
-          <p>Controle de clientes sem remessa</p>
-        </div>
-      </div>
-      <button class="btn ghost" id="logoutBtn">Sair</button>
-    </header>
 
-    <section class="panel controls">
-      <div class="upload-row">
-        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.json" />
-        <button class="btn" id="loadFileBtn">Carregar arquivo</button>
-        <button class="btn ghost" id="loadDemoBtn">Carregar demo</button>
-        <button class="btn danger" id="clearBtn">Excluir dados</button>
-      </div>
+<main class="dashboard">
 
-      <div class="messages">
-        <p id="fileName">Nenhum arquivo selecionado</p>
-        <p id="statusMsg"></p>
-      </div>
+<header class="topbar">
+  <div class="brand">
+    <img src="logo-areia-ana.png" class="logo">
+    <h1>Portal de Alertas - Remessas</h1>
+  </div>
+  <button onclick="logout()" class="btn ghost">Sair</button>
+</header>
 
-      <div class="filter-row">
-        <select id="yearFilter">
-          <option value="todos">Ano: todos</option>
-        </select>
-        <select id="monthFilter">
-          <option value="todos">Mês: todos</option>
-        </select>
-        <label>
-          <input type="checkbox" id="materialsToggle" />
-          Mostrar materiais/produtos
-        </label>
-      </div>
-    </section>
+<section class="panel controls" id="adminPanel">
+  <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.json">
+  <button id="loadFileBtn" class="btn">Carregar arquivo</button>
+  <button id="clearBtn" class="btn danger">Excluir dados</button>
+  <p id="statusMsg">Aguardando importação…</p>
+</section>
 
-    <section class="panel">
-      <h2>Resumo</h2>
+<section class="panel">
+  <h2>Resumo</h2>
+  <div class="summary-grid">
+    <div><strong id="contratos">0</strong><span>Contratos</span></div>
+    <div><strong id="clientes">0</strong><span>Clientes</span></div>
+    <div><strong id="volume">0</strong><span>Volume total</span></div>
+    <div><strong id="ok">0</strong><span>OK</span></div>
+    <div><strong id="warn">0</strong><span>Atenção</span></div>
+    <div><strong id="grave">0</strong><span>Grave</span></div>
+    <div><strong id="action">0</strong><span>Plano ação</span></div>
+  </div>
+</section>
 
-      <div class="summary-grid top">
-        <article class="summary-card">
-          <strong id="contratos">0</strong>
-          <span>Contratos exibidos</span>
-        </article>
-        <article class="summary-card">
-          <strong id="clientes">0</strong>
-          <span>Clientes únicos (CNPJ)</span>
-        </article>
-        <article class="summary-card">
-          <strong id="volume">0</strong>
-          <span>Volume total da obra</span>
-        </article>
-      </div>
+<section class="panel">
+  <h2>Detalhamento</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>CNPJ</th>
+        <th>Contrato</th>
+        <th>Obra</th>
+        <th>Volume</th>
+        <th>Última remessa</th>
+        <th>Dias sem remessa</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</section>
 
-      <div class="summary-grid status">
-        <article class="summary-card ok">
-          <h3>OK</h3>
-          <strong id="ok">0</strong>
-          <span>0 a 7 dias sem remessa</span>
-        </article>
+</main>
 
-        <article class="summary-card warn">
-          <h3>Atenção</h3>
-          <strong id="warn">0</strong>
-          <span>8 a 14 dias sem remessa</span>
-        </article>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
 
-        <article class="summary-card grave">
-          <h3>Atenção grave</h3>
-          <strong id="grave">0</strong>
-          <span>15 a 21 dias sem remessa</span>
-        </article>
-
-        <article class="summary-card action">
-          <h3>Plano de ação</h3>
-          <strong id="action">0</strong>
-          <span>&gt; 21 dias sem remessa</span>
-        </article>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="section-title">
-        <h2>Evolução de remessas</h2>
-        <button class="btn ghost" id="refreshChartBtn">Atualizar gráfico</button>
-      </div>
-
-      <div class="chart-box">
-        <div id="chartBars" class="chart-bars"></div>
-        <div id="chartLabels" class="chart-labels"></div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <div class="section-title">
-        <div>
-          <h2>Detalhamento</h2>
-          <p class="helper">Ordenado da maior para a menor urgência</p>
-          <p class="helper" id="recordsInfo">Mostrando 0 registros</p>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>CNPJ / Cliente</th>
-              <th>Contrato</th>
-              <th>Nome da obra</th>
-              <th>Volume da obra</th>
-              <th>Última remessa</th>
-              <th>Dias sem remessa</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <footer id="buildInfo">Build atualizado</footer>
-  </main>
-
-  <script src="app.js"></script>
 </body>
 </html>
