@@ -9,6 +9,8 @@ const tableBody = document.getElementById("tableBody");
 const kpiContracts = document.getElementById("kpiContracts");
 const kpiClients = document.getElementById("kpiClients");
 const kpiVolume = document.getElementById("kpiVolume");
+const adminPanel = document.getElementById("adminPanel");
+const buildInfo = document.getElementById("buildInfo");
 
 let allRows = [];
 
@@ -17,7 +19,13 @@ function setStatus(t){
 }
 
 function parseExcelDate(v){
-  if(!v) return null;
+  if(v === undefined || v === null || v === "") return null;
+  if(typeof v === "number"){
+    const parsed = XLSX.SSF.parse_date_code(v);
+    if(parsed){
+      return new Date(parsed.y, parsed.m - 1, parsed.d);
+    }
+  }
   if(v instanceof Date) return v;
   const d = new Date(v);
   return isNaN(d) ? null : d;
@@ -49,6 +57,16 @@ function render(){
   kpiVolume.textContent = allRows.reduce((a,b)=>a+b.volume,0);
 }
 
+function initAccess(){
+  if(role === "admin") return;
+
+  adminPanel.style.display = "none";
+
+  if(role === "user"){
+    buildInfo.textContent = "Modo de visualização: apenas leitura.";
+  }
+}
+
 loadFileBtn.addEventListener("click", async ()=>{
   if(role!=="admin") return;
 
@@ -77,3 +95,5 @@ clearBtn.addEventListener("click", ()=>{
   render();
   setStatus("Dados removidos.");
 });
+
+initAccess();

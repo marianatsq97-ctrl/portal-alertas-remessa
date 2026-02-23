@@ -12,7 +12,8 @@
 
 <script>
 const role = localStorage.getItem("role");
-if(!role){
+if(role !== "admin" && role !== "user"){
+  localStorage.removeItem("role");
   window.location.href="login.html";
 }
 </script>
