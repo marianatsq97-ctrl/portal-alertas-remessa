@@ -6,7 +6,6 @@ body{
 }
 
 /* HEADER */
-
 .header{
   background:#12264b;
   display:flex;
@@ -25,6 +24,11 @@ body{
   width:50px;
 }
 
+.subtitle{
+  font-size:14px;
+  color:#ccc;
+}
+
 .btn-logout{
   background:#ff4d4d;
   border:none;
@@ -35,7 +39,6 @@ body{
 }
 
 /* CONTAINER */
-
 .container{
   max-width:1200px;
   margin:40px auto;
@@ -50,20 +53,22 @@ body{
   box-shadow:0 10px 25px rgba(0,0,0,.4);
 }
 
-.import-row{
+/* IMPORTAÇÃO */
+.import-card{
   display:flex;
   gap:15px;
   flex-wrap:wrap;
+  align-items:center;
 }
 
 .status{
+  width:100%;
   margin-top:10px;
   font-size:14px;
   color:#ffb84d;
 }
 
 /* BOTÕES */
-
 .btn-primary{
   background:#ff8c2f;
   border:none;
@@ -82,8 +87,7 @@ body{
   cursor:pointer;
 }
 
-/* KPIs */
-
+/* KPIS */
 .kpis{
   display:flex;
   gap:30px;
@@ -91,32 +95,36 @@ body{
 }
 
 .kpi{
-  background:#12264b;
+  flex:1;
+  min-width:200px;
   padding:20px;
-  border-radius:10px;
-  min-width:150px;
+  border-radius:12px;
   text-align:center;
 }
 
-.kpi span{
+.kpi strong{
+  font-size:32px;
   display:block;
-  font-size:14px;
-  color:#bbb;
+  margin-top:10px;
 }
 
-.kpi strong{
-  font-size:28px;
-}
+.kpi.blue{ background:#1e3a8a; }
+.kpi.purple{ background:#6d28d9; }
+.kpi.orange{ background:#ea580c; }
 
 /* TABELA */
-
 table{
   width:100%;
   border-collapse:collapse;
 }
 
-th, td{
+th{
+  text-align:left;
+  padding:12px;
+  color:#ffb84d;
+}
+
+td{
   padding:12px;
   border-bottom:1px solid #1e2d4d;
-  text-align:left;
 }
