@@ -4,88 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Portal de Alertas - Remessas</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-
-<script>
-const role = localStorage.getItem("role");
-if(!role){
-  window.location.href="login.html";
-}
-</script>
-
-<header class="header">
-  <div class="header-left">
-    <img src="logo-areia-ana.png" class="logo">
-    <div>
-      <h1>Portal de Alertas - Remessas</h1>
-      <span class="subtitle">Controle de clientes sem remessa</span>
-    </div>
-  </div>
-  <button onclick="logout()" class="btn-logout">Sair</button>
-</header>
-
 <div class="container">
 
-  <!-- IMPORTAÇÃO -->
-  <div class="card import-card" id="adminPanel">
-    <input type="file" id="fileInput" accept=".xlsx">
-    <button id="loadFileBtn" class="btn-primary">Carregar arquivo</button>
-    <button id="clearBtn" class="btn-danger">Excluir dados</button>
-    <div id="statusMsg" class="status"></div>
+<header class="top">
+  <div>
+    <h1>Portal de Alertas - Remessas</h1>
+    <p>Acompanhamento SQL42 + TopCon (> 7 dias)</p>
   </div>
+  <button class="btn">Sair</button>
+</header>
 
-  <!-- RESUMO -->
-  <div class="card">
-    <h2>Resumo</h2>
-    <div class="kpis">
-      <div class="kpi blue">
-        <span>Contratos</span>
-        <strong id="kpiContracts">0</strong>
-      </div>
-      <div class="kpi purple">
-        <span>Clientes únicos</span>
-        <strong id="kpiClients">0</strong>
-      </div>
-      <div class="kpi orange">
-        <span>Volume total</span>
-        <strong id="kpiVolume">0</strong>
-      </div>
-    </div>
-  </div>
+<section class="panel">
+  <h2>Alertas automáticos</h2>
+  <p id="meta"></p>
 
-  <!-- DETALHAMENTO -->
-  <div class="card">
-    <h2>Detalhamento</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>CNPJ</th>
-          <th>Contrato</th>
-          <th>Obra</th>
-          <th>Volume</th>
-          <th>Última remessa</th>
-          <th>Dias</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
+  <table>
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Última remessa</th>
+        <th>Dias</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="alertsBody"></tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Resumo</h2>
+  <div class="cards">
+    <div class="card"><strong id="total">0</strong><span>Total alertas</span></div>
   </div>
+</section>
 
 </div>
 
-<script src="app.js"></script>
-
-<script>
-function logout(){
-  localStorage.removeItem("role");
-  window.location.href="login.html";
-}
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
