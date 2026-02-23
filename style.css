@@ -1,130 +1,67 @@
-body{
+body {
   margin:0;
-  font-family:Arial, Helvetica, sans-serif;
-  background:linear-gradient(135deg,#020c1b,#081a33);
-  color:white;
+  font-family:Segoe UI, sans-serif;
+  background:#071c4d;
+  color:#fff;
 }
 
-/* HEADER */
-.header{
-  background:#12264b;
+.container{
+  width:95%;
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
+
+.top{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:20px 40px;
 }
 
-.header-left{
-  display:flex;
-  align-items:center;
-  gap:20px;
+h1{
+  color:#ffb62e;
 }
 
-.logo{
-  width:50px;
-}
-
-.subtitle{
-  font-size:14px;
-  color:#ccc;
-}
-
-.btn-logout{
-  background:#ff4d4d;
-  border:none;
-  padding:10px 20px;
-  border-radius:20px;
-  color:white;
-  cursor:pointer;
-}
-
-/* CONTAINER */
-.container{
-  max-width:1200px;
-  margin:40px auto;
-  padding:0 20px;
-}
-
-.card{
-  background:#0d1b3a;
-  padding:25px;
-  border-radius:15px;
-  margin-bottom:30px;
-  box-shadow:0 10px 25px rgba(0,0,0,.4);
-}
-
-/* IMPORTAÇÃO */
-.import-card{
-  display:flex;
-  gap:15px;
-  flex-wrap:wrap;
-  align-items:center;
-}
-
-.status{
-  width:100%;
-  margin-top:10px;
-  font-size:14px;
-  color:#ffb84d;
-}
-
-/* BOTÕES */
-.btn-primary{
-  background:#ff8c2f;
-  border:none;
-  padding:10px 20px;
-  border-radius:20px;
-  color:white;
-  cursor:pointer;
-}
-
-.btn-danger{
-  background:#ff4d4d;
-  border:none;
-  padding:10px 20px;
-  border-radius:20px;
-  color:white;
-  cursor:pointer;
-}
-
-/* KPIS */
-.kpis{
-  display:flex;
-  gap:30px;
-  flex-wrap:wrap;
-}
-
-.kpi{
-  flex:1;
-  min-width:200px;
+.panel{
+  background:#0b2a75;
   padding:20px;
   border-radius:12px;
-  text-align:center;
+  margin-top:20px;
 }
 
-.kpi strong{
-  font-size:32px;
-  display:block;
-  margin-top:10px;
-}
-
-.kpi.blue{ background:#1e3a8a; }
-.kpi.purple{ background:#6d28d9; }
-.kpi.orange{ background:#ea580c; }
-
-/* TABELA */
 table{
   width:100%;
   border-collapse:collapse;
 }
 
-th{
-  text-align:left;
-  padding:12px;
-  color:#ffb84d;
+th, td{
+  padding:10px;
+  border-bottom:1px solid #2e5cd4;
 }
 
-td{
-  padding:12px;
-  border-bottom:1px solid #1e2d4d;
+th{
+  color:#ffb62e;
+}
+
+.btn{
+  background:#ffb62e;
+  border:none;
+  padding:10px 20px;
+  border-radius:20px;
+  cursor:pointer;
+}
+
+.cards{
+  display:flex;
+  gap:20px;
+}
+
+.card{
+  background:#081e5c;
+  padding:20px;
+  border-radius:10px;
+}
+
+.card strong{
+  font-size:32px;
 }
