@@ -2,6 +2,18 @@
 
 Portal no estilo **Areia Ana** para monitorar remessas e gerar alerta automático quando um cliente ficar **mais de 7 dias sem remessa**.
 
+## Acesso correto no GitHub
+
+Para abrir o portal funcionando, use a URL do **GitHub Pages** (não a tela de código/commits do repositório):
+
+- Formato: `https://<usuario>.github.io/portal-alertas-remessa/`
+- Exemplo: `https://mariantasq97-ctrl.github.io/portal-alertas-remessa/`
+
+Credenciais de acesso:
+
+- `admin / 1234` (importa arquivos e visualiza)
+- `usuario / 1234` (somente visualização)
+
 ## Regra de negócio
 
 ```text
