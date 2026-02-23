@@ -16,28 +16,26 @@ function setStatus(t){
   statusMsg.textContent = t || "";
 }
 
-function parseExcelDate(v){
-  if(!v) return null;
-  if(v instanceof Date) return v;
+function parseDate(v){
   const d = new Date(v);
   return isNaN(d) ? null : d;
 }
 
 function daysSince(d){
   if(!d) return null;
-  return Math.floor((Date.now() - d.getTime()) / 86400000);
+  return Math.floor((Date.now()-d.getTime())/86400000);
 }
 
 function render(){
   tableBody.innerHTML = allRows.map(r=>{
-    const d = daysSince(r.lastDate);
+    const d = daysSince(r.date);
     return `
       <tr>
         <td>${r.cnpj}</td>
         <td>${r.contrato}</td>
         <td>${r.obra}</td>
         <td>${r.volume}</td>
-        <td>${r.lastDate ? r.lastDate.toLocaleDateString("pt-BR") : ""}</td>
+        <td>${r.date ? r.date.toLocaleDateString("pt-BR") : ""}</td>
         <td>${d ?? ""}</td>
         <td>${d>21 ? "Plano de ação" : "OK"}</td>
       </tr>
@@ -65,7 +63,7 @@ loadFileBtn.addEventListener("click", async ()=>{
     contrato: r["Contrato"] || "",
     obra: r["Nome da obra"] || "",
     volume: Number(r["Quantidade"] || 0),
-    lastDate: parseExcelDate(r["Data da remessa"])
+    date: parseDate(r["Data da remessa"])
   }));
 
   render();
