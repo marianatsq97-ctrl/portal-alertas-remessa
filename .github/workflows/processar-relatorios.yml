@@ -1,0 +1,33 @@
+name: Gerar alertas
+
+on:
+  push:
+    paths:
+      - "data/**"
+      - "scripts/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: |
+          python -m pip install pandas openpyxl xlrd
+
+      - run: python scripts/gerar_alertas.py
+
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add alerts.json
+          git commit -m "Atualiza alertas" || echo "Sem mudanças"
+          git push
