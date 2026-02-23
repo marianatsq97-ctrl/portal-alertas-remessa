@@ -5,104 +5,118 @@ body{
   color:white;
 }
 
-/* LOGIN */
+/* HEADER */
 
-.login-body{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
-}
-
-.login-card{
-  background:#0d1b3a;
-  padding:50px;
-  border-radius:20px;
-  width:420px;
-  text-align:center;
-  box-shadow:0 20px 40px rgba(0,0,0,.6);
-}
-
-.login-logo{
-  width:180px;
-  margin-bottom:20px;
-}
-
-.login-title{
-  color:#ff8c2f;
-}
-
-.login-input{
-  width:100%;
-  padding:12px;
-  margin-bottom:15px;
-  border-radius:10px;
-  border:none;
-  background:#08142b;
-  color:white;
-}
-
-.login-btn{
-  width:100%;
-  padding:15px;
-  border-radius:30px;
-  border:none;
-  background:linear-gradient(90deg,#ff7a18,#ff9e43);
-  font-weight:bold;
-  cursor:pointer;
-}
-
-.login-msg{
-  margin-top:10px;
-  color:#ff5b5b;
-}
-
-/* SISTEMA */
-
-.topbar{
+.header{
+  background:#12264b;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:15px 30px;
-  background:#0d1b3a;
+  padding:20px 40px;
 }
 
-.logo-area{
+.header-left{
   display:flex;
   align-items:center;
-  gap:15px;
+  gap:20px;
 }
 
-.logo-header{
-  width:60px;
+.logo{
+  width:50px;
 }
 
-.logout-btn{
+.btn-logout{
   background:#ff4d4d;
   border:none;
   padding:10px 20px;
   border-radius:20px;
-  cursor:pointer;
   color:white;
+  cursor:pointer;
 }
 
-.content{
-  padding:40px;
+/* CONTAINER */
+
+.container{
+  max-width:1200px;
+  margin:40px auto;
+  padding:0 20px;
 }
 
-table{
-  width:100%;
-  margin-top:20px;
-  border-collapse:collapse;
+.card{
+  background:#0d1b3a;
+  padding:25px;
+  border-radius:15px;
+  margin-bottom:30px;
+  box-shadow:0 10px 25px rgba(0,0,0,.4);
 }
 
-th, td{
-  padding:10px;
-  border-bottom:1px solid #1e2d4d;
+.import-row{
+  display:flex;
+  gap:15px;
+  flex-wrap:wrap;
 }
+
+.status{
+  margin-top:10px;
+  font-size:14px;
+  color:#ffb84d;
+}
+
+/* BOTÕES */
+
+.btn-primary{
+  background:#ff8c2f;
+  border:none;
+  padding:10px 20px;
+  border-radius:20px;
+  color:white;
+  cursor:pointer;
+}
+
+.btn-danger{
+  background:#ff4d4d;
+  border:none;
+  padding:10px 20px;
+  border-radius:20px;
+  color:white;
+  cursor:pointer;
+}
+
+/* KPIs */
 
 .kpis{
   display:flex;
   gap:30px;
-  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.kpi{
+  background:#12264b;
+  padding:20px;
+  border-radius:10px;
+  min-width:150px;
+  text-align:center;
+}
+
+.kpi span{
+  display:block;
+  font-size:14px;
+  color:#bbb;
+}
+
+.kpi strong{
+  font-size:28px;
+}
+
+/* TABELA */
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td{
+  padding:12px;
+  border-bottom:1px solid #1e2d4d;
+  text-align:left;
 }
