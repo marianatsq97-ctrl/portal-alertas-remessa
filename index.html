@@ -1,66 +1,121 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Alertas - Remessas</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal de Alertas - Remessas</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
+  <main class="dashboard">
+    <header class="topbar">
+      <div class="brand">
+        <img src="logo-areia-ana.png" class="logo" alt="Areia Ana" />
+        <div>
+          <h1>Portal de Alertas - Remessas</h1>
+          <p class="subtitle">Controle de clientes sem remessa</p>
+        </div>
+      </div>
 
-<main class="dashboard">
+      <button class="btn ghost" id="btnLogout">Sair</button>
+    </header>
 
-<header class="topbar">
-  <div class="brand">
-    <img src="logo-areia-ana.png" class="logo">
-    <h1>Portal de Alertas - Remessas</h1>
-  </div>
-  <button onclick="logout()" class="btn ghost">Sair</button>
-</header>
+    <!-- ADMIN: só aparece se role=admin -->
+    <section class="panel controls" id="adminPanel">
+      <div class="upload-row">
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+        <button id="loadFileBtn" class="btn primary">Carregar arquivo</button>
+        <button id="clearBtn" class="btn danger">Excluir dados</button>
+      </div>
 
-<section class="panel controls" id="adminPanel">
-  <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.json">
-  <button id="loadFileBtn" class="btn">Carregar arquivo</button>
-  <button id="clearBtn" class="btn danger">Excluir dados</button>
-  <p id="statusMsg">Aguardando importação…</p>
-</section>
+      <div class="filters-row">
+        <select id="yearFilter">
+          <option value="">Ano: todos</option>
+        </select>
 
-<section class="panel">
-  <h2>Resumo</h2>
-  <div class="summary-grid">
-    <div><strong id="contratos">0</strong><span>Contratos</span></div>
-    <div><strong id="clientes">0</strong><span>Clientes</span></div>
-    <div><strong id="volume">0</strong><span>Volume total</span></div>
-    <div><strong id="ok">0</strong><span>OK</span></div>
-    <div><strong id="warn">0</strong><span>Atenção</span></div>
-    <div><strong id="grave">0</strong><span>Grave</span></div>
-    <div><strong id="action">0</strong><span>Plano ação</span></div>
-  </div>
-</section>
+        <select id="monthFilter">
+          <option value="">Mês: todos</option>
+        </select>
+      </div>
 
-<section class="panel">
-  <h2>Detalhamento</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>CNPJ</th>
-        <th>Contrato</th>
-        <th>Obra</th>
-        <th>Volume</th>
-        <th>Última remessa</th>
-        <th>Dias sem remessa</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
-</section>
+      <div class="status-row">
+        <span id="statusMsg">Aguardando importação…</span>
+      </div>
+    </section>
 
-</main>
+    <section class="panel">
+      <h2>Resumo</h2>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="app.js"></script>
+      <div class="summary-grid">
+        <div class="kpi">
+          <div class="kpi-number" id="kpiContracts">0</div>
+          <div class="kpi-label">Contratos exibidos</div>
+        </div>
 
+        <div class="kpi">
+          <div class="kpi-number" id="kpiClients">0</div>
+          <div class="kpi-label">Clientes únicos (CNPJ)</div>
+        </div>
+
+        <div class="kpi">
+          <div class="kpi-number" id="kpiVolume">0</div>
+          <div class="kpi-label">Volume total da obra</div>
+        </div>
+      </div>
+
+      <div class="status-cards">
+        <div class="status-card ok">
+          <div class="status-title">OK</div>
+          <div class="status-number" id="kpiOK">0</div>
+          <div class="status-sub">0 a 7 dias sem remessa</div>
+        </div>
+
+        <div class="status-card warn">
+          <div class="status-title">Atenção</div>
+          <div class="status-number" id="kpiWarn">0</div>
+          <div class="status-sub">8 a 14 dias sem remessa</div>
+        </div>
+
+        <div class="status-card grave">
+          <div class="status-title">Atenção grave</div>
+          <div class="status-number" id="kpiGrave">0</div>
+          <div class="status-sub">15 a 21 dias sem remessa</div>
+        </div>
+
+        <div class="status-card action">
+          <div class="status-title">Plano de ação</div>
+          <div class="status-number" id="kpiAction">0</div>
+          <div class="status-sub">&gt; 21 dias sem remessa</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Detalhamento</h2>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>CNPJ</th>
+              <th>Contrato</th>
+              <th>Nome da obra</th>
+              <th>Volume da obra</th>
+              <th>Última remessa</th>
+              <th>Dias sem remessa</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="footer-note" id="buildInfo"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
