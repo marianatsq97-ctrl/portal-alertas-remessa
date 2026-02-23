@@ -1,5 +1,49 @@
 {
   "gerado_em": "2026-02-23",
-  "total_alertas": 0,
-  "alertas": []
+  "regra": "data_hoje - data_ultima_remessa > 7",
+  "formatos_suportados": [
+    "CSC",
+    "CSV",
+    "XLS",
+    "XLSX"
+  ],
+  "total_alertas": 4,
+  "alertas": [
+    {
+      "Fonte": "sql42_complementar.csv",
+      "CodCliente": "001",
+      "NomeCliente": "Construtora XPTO",
+      "DataUltimaRemessa": "2026-01-01",
+      "DiasSemRemessa": 53,
+      "Status": "PLANO_DE_ACAO",
+      "Acao": "Criar PLANO DE AÇÃO"
+    },
+    {
+      "Fonte": "topcon_ultimo_consumo.csv",
+      "CodCliente": "T001",
+      "NomeCliente": "Topcon Alfa",
+      "DataUltimaRemessa": "2026-01-05",
+      "DiasSemRemessa": 49,
+      "Status": "PLANO_DE_ACAO",
+      "Acao": "Criar PLANO DE AÇÃO"
+    },
+    {
+      "Fonte": "sql42_complementar.csv",
+      "CodCliente": "003",
+      "NomeCliente": "Cliente Delta",
+      "DataUltimaRemessa": "2026-01-18",
+      "DiasSemRemessa": 36,
+      "Status": "PLANO_DE_ACAO",
+      "Acao": "Criar PLANO DE AÇÃO"
+    },
+    {
+      "Fonte": "sql42_complementar.csv",
+      "CodCliente": "002",
+      "NomeCliente": "Obra ABC",
+      "DataUltimaRemessa": "2026-02-15",
+      "DiasSemRemessa": 8,
+      "Status": "PLANO_DE_ACAO",
+      "Acao": "Criar PLANO DE AÇÃO"
+    }
+  ]
 }

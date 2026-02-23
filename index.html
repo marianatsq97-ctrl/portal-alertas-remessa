@@ -1,49 +1,124 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Alertas - Remessas</title>
-<link rel="stylesheet" href="styles.css">
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Alertas - Remessas</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <div>
+          <h1>Portal de Alertas - Remessas</h1>
+          <p>Controle de clientes sem remessa.</p>
+        </div>
+        <div class="top-actions">
+          <span id="roleTag" class="role-tag">Perfil: -</span>
+          <button id="logoutBtn" class="btn btn-outline" type="button">Sair</button>
+        </div>
+      </header>
 
-<body>
-<div class="container">
+      <section class="panel controls-panel">
+        <div id="adminControls" class="controls-row">
+          <input type="file" id="fileInput" accept=".csv,.csc,.xls,.xlsx,.json" />
+          <button id="uploadBtn" class="btn btn-primary" type="button">Carregar arquivo</button>
+          <button id="clearBtn" class="btn btn-danger" type="button">Excluir dados</button>
+        </div>
 
-<header class="top">
-  <div>
-    <h1>Portal de Alertas - Remessas</h1>
-    <p>Acompanhamento SQL42 + TopCon (> 7 dias)</p>
-  </div>
-  <button class="btn">Sair</button>
-</header>
+        <p id="statusText">Nenhum arquivo selecionado.</p>
 
-<section class="panel">
-  <h2>Alertas automáticos</h2>
-  <p id="meta"></p>
+        <div class="filters compact">
+          <label>
+            <span class="sr-only">Filtrar por ano</span>
+            <select id="yearFilter"></select>
+          </label>
+          <label>
+            <span class="sr-only">Filtrar por mês</span>
+            <select id="monthFilter"></select>
+          </label>
+        </div>
+      </section>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Cliente</th>
-        <th>Última remessa</th>
-        <th>Dias</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="alertsBody"></tbody>
-  </table>
-</section>
+      <section class="panel">
+        <h2>Resumo</h2>
+        <div class="summary-grid top">
+          <article class="card">
+            <strong id="contractsCount">0</strong>
+            <span>Contratos exibidos</span>
+          </article>
+          <article class="card">
+            <strong id="clientsCount">0</strong>
+            <span>Clientes únicos (CNPJ)</span>
+          </article>
+          <article class="card">
+            <strong id="volumeCount">0</strong>
+            <span>Volume total da obra</span>
+          </article>
+        </div>
+        <div class="summary-grid bottom">
+          <article class="card status ok">
+            <h3>OK</h3>
+            <strong id="okCount">0</strong>
+            <span>0 a 7 dias sem remessa</span>
+          </article>
+          <article class="card status warn">
+            <h3>Atenção</h3>
+            <strong id="warnCount">0</strong>
+            <span>8 a 14 dias sem remessa</span>
+          </article>
+          <article class="card status alert">
+            <h3>Atenção grave</h3>
+            <strong id="alertCount">0</strong>
+            <span>15 a 21 dias sem remessa</span>
+          </article>
+          <article class="card status critical">
+            <h3>Plano de ação</h3>
+            <strong id="criticalCount">0</strong>
+            <span>&gt; 21 dias sem remessa</span>
+          </article>
+        </div>
+      </section>
 
-<section class="panel">
-  <h2>Resumo</h2>
-  <div class="cards">
-    <div class="card"><strong id="total">0</strong><span>Total alertas</span></div>
-  </div>
-</section>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Evolução de remessas</h2>
+          <button id="refreshChart" class="btn btn-outline" type="button">Atualizar gráfico</button>
+        </div>
+        <div id="chart" class="chart"></div>
+      </section>
 
-</div>
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Detalhamento</h2>
+          <div class="pager">
+            <button id="prevPage" class="btn btn-outline" type="button">Anterior</button>
+            <button id="nextPage" class="btn btn-outline" type="button">Próxima</button>
+          </div>
+        </div>
+        <p id="tableMeta">Ordenado da maior para a menor urgência (dias sem remessa).</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>CNPJ / Cliente</th>
+                <th>Contrato</th>
+                <th>Nome da obra</th>
+                <th>Volume da obra</th>
+                <th>Última remessa</th>
+                <th>Dias sem remessa</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </section>
 
-<script src="script.js"></script>
-</body>
+      <footer class="footer">Build 2026-02-23d</footer>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>

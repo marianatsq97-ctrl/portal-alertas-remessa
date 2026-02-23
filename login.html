@@ -1,50 +1,52 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Alertas</title>
-<link rel="stylesheet" href="style.css">
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Alertas - Login</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="login-page">
+    <main class="login-wrap">
+      <img src="logo-areia-ana.png" class="login-logo" alt="Logo Areia Ana" />
 
-<body class="login-body">
+      <h1 class="login-title">Portal de Alertas</h1>
+      <p class="login-sub">Acesso restrito</p>
 
-<div class="login-card">
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <input id="user" type="text" class="login-input" placeholder="Usuário" required />
+        <input id="pass" type="password" class="login-input" placeholder="Senha" required />
+        <button type="submit" class="login-btn">Entrar</button>
+      </form>
 
-  <img src="logo-areia-ana.png" class="login-logo">
+      <p class="login-hint">Acessos: <strong>admin/1234</strong> e <strong>usuario/1234</strong>.</p>
+      <p id="msg" class="login-msg"></p>
+    </main>
 
-  <h1 class="login-title">Portal de Alertas</h1>
-  <p class="login-sub">Acesso restrito</p>
+    <script>
+      const ROLE_KEY = "role";
 
-  <input id="user" type="text" placeholder="Usuário" class="login-input">
-  <input id="pass" type="password" placeholder="Senha" class="login-input">
+      document.getElementById("loginForm").addEventListener("submit", function (event) {
+        event.preventDefault();
 
-  <button onclick="login()" class="login-btn">Entrar</button>
+        const user = document.getElementById("user").value.trim().toLowerCase();
+        const pass = document.getElementById("pass").value.trim();
+        const msg = document.getElementById("msg");
 
-  <div id="msg" class="login-msg"></div>
+        if (user === "admin" && pass === "1234") {
+          localStorage.setItem(ROLE_KEY, "admin");
+          window.location.href = "index.html";
+          return;
+        }
 
-</div>
+        if (user === "usuario" && pass === "1234") {
+          localStorage.setItem(ROLE_KEY, "user");
+          window.location.href = "index.html";
+          return;
+        }
 
-<script>
-function login(){
-  const u = document.getElementById("user").value.trim();
-  const p = document.getElementById("pass").value.trim();
-
-  if(u==="admin" && p==="1234"){
-    localStorage.setItem("role","admin");
-    window.location.href="index.html";
-    return;
-  }
-
-  if(u==="usuario" && p==="1234"){
-    localStorage.setItem("role","user");
-    window.location.href="index.html";
-    return;
-  }
-
-  document.getElementById("msg").textContent="Usuário ou senha inválidos";
-}
-</script>
-
-</body>
+        msg.textContent = "Usuário ou senha inválidos.";
+      });
+    </script>
+  </body>
 </html>
