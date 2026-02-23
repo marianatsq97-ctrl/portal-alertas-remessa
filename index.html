@@ -1,107 +1,91 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portal de Alertas - Remessas</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Alertas - Remessas</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
+
 <body>
-  <main class="dashboard">
-    <header class="topbar">
-      <div class="brand">
-        <img src="logo-areia-ana.png" alt="Logo Areia ANA" class="logo" />
-        <div>
-          <h1>Portal de Alertas - Remessas</h1>
-          <p>Controle de clientes sem remessa.</p>
-        </div>
-      </div>
-      <button class="btn ghost">Sair</button>
-    </header>
 
-    <section class="panel controls">
-      <div class="upload-row">
-        <input type="file" id="fileInput" accept=".json,.csv,.xlsx,.xls" />
-        <button class="btn" id="loadFileBtn">Carregar arquivo</button>
-        <button class="btn ghost" id="loadDemoBtn">Carregar demo</button>
-        <button class="btn danger" id="clearBtn">Excluir dados</button>
-      </div>
+<script>
+const role = localStorage.getItem("role");
+if(!role){
+  window.location.href="login.html";
+}
+</script>
 
-      <div class="messages">
-        <p id="fileName">Nenhum arquivo selecionado</p>
-        <p id="statusMsg">Aguardando importação…</p>
-      </div>
+<header class="header">
+  <div class="header-left">
+    <img src="logo-areia-ana.png" class="logo">
+    <div>
+      <h1>Portal de Alertas - Remessas</h1>
+      <span class="subtitle">Controle de clientes sem remessa</span>
+    </div>
+  </div>
+  <button onclick="logout()" class="btn-logout">Sair</button>
+</header>
 
-      <div class="filter-row">
-        <select id="yearFilter"><option value="todos">Ano: todos</option></select>
-        <select id="monthFilter"><option value="todos">Mês: todos</option></select>
-        <label><input type="checkbox" id="materialsToggle"> Mostrar materiais/produtos</label>
-      </div>
-    </section>
+<div class="container">
 
-    <section class="panel">
-      <h2>Resumo</h2>
-      <div class="summary-grid top">
-        <article class="summary-card"><strong id="contratos">0</strong><span>Contratos exibidos</span></article>
-        <article class="summary-card"><strong id="clientes">0</strong><span>Clientes únicos (CNPJ)</span></article>
-        <article class="summary-card"><strong id="volume">0</strong><span>Volume total da obra</span></article>
-      </div>
-      <div class="summary-grid status">
-        <article class="summary-card ok"><h3>OK</h3><strong id="ok">0</strong><span>0 a 7 dias sem remessa</span></article>
-        <article class="summary-card warn"><h3>Atenção</h3><strong id="warn">0</strong><span>8 a 14 dias sem remessa</span></article>
-        <article class="summary-card grave"><h3>Atenção grave</h3><strong id="grave">0</strong><span>15 a 21 dias sem remessa</span></article>
-        <article class="summary-card action"><h3>Plano de ação</h3><strong id="action">0</strong><span>&gt; 21 dias sem remessa</span></article>
-      </div>
-    </section>
+  <!-- IMPORTAÇÃO -->
+  <div class="card import-card" id="adminPanel">
+    <input type="file" id="fileInput" accept=".xlsx">
+    <button id="loadFileBtn" class="btn-primary">Carregar arquivo</button>
+    <button id="clearBtn" class="btn-danger">Excluir dados</button>
+    <div id="statusMsg" class="status"></div>
+  </div>
 
-    <section class="panel chart-panel">
-      <div class="section-title">
-        <h2>Evolução de remessas</h2>
-        <button class="btn ghost" id="refreshChartBtn">Atualizar gráfico</button>
+  <!-- RESUMO -->
+  <div class="card">
+    <h2>Resumo</h2>
+    <div class="kpis">
+      <div class="kpi blue">
+        <span>Contratos</span>
+        <strong id="kpiContracts">0</strong>
       </div>
-      <div class="chart-box">
-        <div id="chartBars" class="chart-bars"></div>
-        <div id="chartLabels" class="chart-labels"></div>
+      <div class="kpi purple">
+        <span>Clientes únicos</span>
+        <strong id="kpiClients">0</strong>
       </div>
-    </section>
-
-    <section class="panel">
-      <div class="section-title">
-        <div>
-          <h2>Detalhamento</h2>
-          <p class="helper">Ordenado da maior para a menor urgência (dias sem remessa).</p>
-          <p class="helper" id="recordsInfo">Mostrando 0 de 0 registros</p>
-        </div>
-        <div class="table-nav">
-          <button class="btn ghost">Anterior</button>
-          <button class="btn ghost">Próxima</button>
-        </div>
+      <div class="kpi orange">
+        <span>Volume total</span>
+        <strong id="kpiVolume">0</strong>
       </div>
+    </div>
+  </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>CNPJ / Cliente</th>
-              <th>Contrato</th>
-              <th>Nome da obra</th>
-              <th>Volume da obra</th>
-              <th>Última remessa</th>
-              <th>Dias sem remessa</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-    </section>
+  <!-- DETALHAMENTO -->
+  <div class="card">
+    <h2>Detalhamento</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>CNPJ</th>
+          <th>Contrato</th>
+          <th>Obra</th>
+          <th>Volume</th>
+          <th>Última remessa</th>
+          <th>Dias</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 
-    <footer>Build 2026-02-22</footer>
-  </main>
+</div>
 
-  <!-- ✅ XLSX (obrigatório para importar Excel) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
 
-  <script src="app.js"></script>
+<script>
+function logout(){
+  localStorage.removeItem("role");
+  window.location.href="login.html";
+}
+</script>
+
 </body>
 </html>
