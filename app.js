@@ -1,162 +1,330 @@
-/* ================= LOGIN ================= */
+/* ==============================
+   PORTAL ALERTAS - REMESSAS
+   ============================== */
 
+/* ======= LOGIN GUARD ======= */
 const role = localStorage.getItem("role");
-if(!role){
+if (!role) {
   window.location.href = "login.html";
 }
 
-function logout(){
-  localStorage.removeItem("role");
-  window.location.href = "login.html";
-}
+document.addEventListener("DOMContentLoaded", () => {
+  const btnLogout = document.getElementById("btnLogout");
+  if (btnLogout) {
+    btnLogout.addEventListener("click", () => {
+      localStorage.removeItem("role");
+      window.location.href = "login.html";
+    });
+  }
+});
 
-if(role === "user"){
-  document.getElementById("adminPanel").style.display = "none";
-}
-
-/* ================= VARIÁVEIS ================= */
-
+/* ======= ELEMENTOS ======= */
+const adminPanel = document.getElementById("adminPanel");
 const fileInput = document.getElementById("fileInput");
-const tableBody = document.getElementById("tableBody");
+const loadFileBtn = document.getElementById("loadFileBtn");
+const clearBtn = document.getElementById("clearBtn");
 const statusMsg = document.getElementById("statusMsg");
 
-let rawData = [];
+const yearFilter = document.getElementById("yearFilter");
+const monthFilter = document.getElementById("monthFilter");
 
-/* ================= UTIL ================= */
+const tableBody = document.getElementById("tableBody");
 
-function parseDate(v){
-  if(!v) return null;
-  if(v instanceof Date) return v;
-  if(typeof v === "number"){
-    return new Date((v - 25569) * 86400 * 1000);
-  }
-  const parts = String(v).split("/");
-  if(parts.length === 3){
-    return new Date(parts[2], parts[1]-1, parts[0]);
-  }
-  return new Date(v);
+const kpiContracts = document.getElementById("kpiContracts");
+const kpiClients = document.getElementById("kpiClients");
+const kpiVolume = document.getElementById("kpiVolume");
+
+const kpiOK = document.getElementById("kpiOK");
+const kpiWarn = document.getElementById("kpiWarn");
+const kpiGrave = document.getElementById("kpiGrave");
+const kpiAction = document.getElementById("kpiAction");
+
+const buildInfo = document.getElementById("buildInfo");
+
+/* ======= VISIBILIDADE ADMIN ======= */
+if (role !== "admin" && adminPanel) {
+  adminPanel.style.display = "none";
 }
 
-function formatDate(d){
-  if(!d || isNaN(d)) return "";
+/* ======= ESTADO ======= */
+let allRows = [];      // normalizado
+let filteredRows = []; // filtrado por ano/mês
+
+/* ======= UTIL ======= */
+function setStatus(t) {
+  if (statusMsg) statusMsg.textContent = t || "";
+}
+
+function pick(obj, keys) {
+  for (const k of keys) {
+    if (obj && Object.prototype.hasOwnProperty.call(obj, k)) {
+      const v = obj[k];
+      if (v !== null && v !== undefined && String(v).trim() !== "") return v;
+    }
+  }
+  return "";
+}
+
+function parseExcelDate(v) {
+  if (!v) return null;
+
+  if (v instanceof Date) return v;
+
+  if (typeof v === "number") {
+    // Excel serial date
+    const d = new Date((v - 25569) * 86400 * 1000);
+    return isNaN(d) ? null : d;
+  }
+
+  const s = String(v).trim();
+
+  // DD/MM/YYYY
+  const parts = s.split("/");
+  if (parts.length === 3) {
+    const dd = Number(parts[0]);
+    const mm = Number(parts[1]) - 1;
+    const yy = Number(parts[2]);
+    const d = new Date(yy, mm, dd);
+    return isNaN(d) ? null : d;
+  }
+
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+function formatDateBR(d) {
+  if (!d || isNaN(d)) return "";
   return d.toLocaleDateString("pt-BR");
 }
 
-function daysWithout(d){
-  if(!d) return null;
-  return Math.floor((new Date() - d)/86400000);
+function safeNumberBR(v) {
+  // aceita "1.234,56" / "1234,56" / "1234.56" / "1234"
+  const s = String(v || "")
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
 }
 
-function formatDays(days){
-  if(days === null) return "";
-  if(days > 365) return (days/365).toFixed(1) + " anos";
-  if(days > 31) return (days/30).toFixed(1) + " meses";
-  return days + " dias";
+function daysSince(dateObj) {
+  if (!dateObj) return null;
+  const diff = Date.now() - dateObj.getTime();
+  return Math.floor(diff / 86400000);
 }
 
-function status(days){
-  if(days <= 7) return ["OK","ok"];
-  if(days <= 14) return ["Atenção","warn"];
-  if(days <= 21) return ["Atenção grave","grave"];
-  return ["Plano de ação","action"];
+function formatDaysSmart(days) {
+  if (days === null) return "";
+  if (days > 365) return `${(days / 365).toFixed(1)} anos`;
+  if (days > 31) return `${(days / 30).toFixed(1)} meses`;
+  return `${days} dias`;
 }
 
-/* ================= IMPORTAÇÃO ================= */
+function statusFromDays(days) {
+  if (days === null) return { text: "", css: "" };
+  if (days <= 7) return { text: "OK", css: "tag ok" };
+  if (days <= 14) return { text: "Atenção", css: "tag warn" };
+  if (days <= 21) return { text: "Atenção grave", css: "tag grave" };
+  return { text: "Plano de ação", css: "tag action" };
+}
 
-document.getElementById("loadFileBtn").addEventListener("click", async ()=>{
+/* ======= NORMALIZAÇÃO XLSX ======= */
+function normalizeRows(rows) {
+  return rows.map((r) => {
+    const cnpj = String(
+      pick(r, ["CNPJ", "CNPJ / Cliente", "CNPJ/Cliente", "Cliente", "CNPJ_CLIENTE"])
+    ).trim();
 
-  const file = fileInput.files[0];
-  if(!file){
-    statusMsg.textContent = "Selecione um arquivo";
-    return;
-  }
+    const contrato = String(
+      pick(r, ["Contrato", "CONTRATO", "Nº Contrato", "NUM_CONTRATO", "CONTR"])
+    ).trim();
 
-  const buffer = await file.arrayBuffer();
-  const wb = XLSX.read(buffer);
-  const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(sheet,{defval:""});
+    const obra = String(
+      pick(r, ["Nome da obra", "OBRA", "Obra", "NOME_OBRA", "EMPREENDEDIMENTO"])
+    ).trim();
 
-  rawData = rows.map(r=>{
+    // VOLUME: tenta vários nomes
+    const volumeRaw = pick(r, [
+      "Volume da obra",
+      "VOLUME DA OBRA",
+      "Volume",
+      "VOLUME",
+      "Quantidade",
+      "QTDE",
+      "QTD",
+      "TOTAL",
+      "VALOR"
+    ]);
+    const volume = safeNumberBR(volumeRaw);
 
-    const volume = parseFloat(
-      String(r["VOLUME"] || r["Volume"] || r["Quantidade"] || 0)
-      .replace(/\./g,"")
-      .replace(",",".")
-    ) || 0;
-
-    const dataObj = parseDate(
-      r["DATA"] || r["Data"] || r["Última remessa"]
-    );
+    // ÚLTIMA REMESSA / DATA
+    const lastDateRaw = pick(r, [
+      "Última remessa",
+      "ULTIMA REMESSA",
+      "Data última remessa",
+      "DATA ULTIMA REMESSA",
+      "Data",
+      "DATA"
+    ]);
+    const lastDate = parseExcelDate(lastDateRaw);
 
     return {
-      cnpj: r["CNPJ"] || r["CNPJ / Cliente"] || "",
-      contrato: r["CONTRATO"] || r["Contrato"] || "",
-      obra: r["OBRA"] || r["Nome da obra"] || "",
+      cnpj,
+      contrato,
+      obra,
       volume,
-      dataObj
+      lastDate,
+      year: lastDate ? lastDate.getFullYear() : null,
+      month: lastDate ? String(lastDate.getMonth() + 1).padStart(2, "0") : null
     };
+  });
+}
 
+/* ======= FILTROS ======= */
+function rebuildFilters() {
+  if (!yearFilter || !monthFilter) return;
+
+  const years = Array.from(new Set(allRows.map(r => r.year).filter(Boolean))).sort((a,b)=>a-b);
+  const months = Array.from(new Set(allRows.map(r => r.month).filter(Boolean))).sort();
+
+  yearFilter.innerHTML = `<option value="">Ano: todos</option>` + years.map(y => `<option value="${y}">${y}</option>`).join("");
+  monthFilter.innerHTML = `<option value="">Mês: todos</option>` + months.map(m => `<option value="${m}">${m}</option>`).join("");
+
+  yearFilter.value = "";
+  monthFilter.value = "";
+}
+
+function applyFilters() {
+  const y = yearFilter ? yearFilter.value : "";
+  const m = monthFilter ? monthFilter.value : "";
+
+  filteredRows = allRows.filter(r => {
+    if (y && String(r.year) !== String(y)) return false;
+    if (m && String(r.month) !== String(m)) return false;
+    return true;
   });
 
   render();
-  statusMsg.textContent = rawData.length + " linhas carregadas";
-});
+}
 
-/* ================= RENDER ================= */
-
-function render(){
-
-  const sorted = [...rawData].sort((a,b)=>{
-    const da = daysWithout(a.dataObj);
-    const db = daysWithout(b.dataObj);
+/* ======= KPIs e TABELA ======= */
+function render() {
+  // ordena por dias sem remessa (maior primeiro)
+  const sorted = [...filteredRows].sort((a, b) => {
+    const da = daysSince(a.lastDate) ?? -1;
+    const db = daysSince(b.lastDate) ?? -1;
     return db - da;
   });
 
-  tableBody.innerHTML = sorted.map(r=>{
+  // tabela
+  if (tableBody) {
+    tableBody.innerHTML = sorted.map((r) => {
+      const d = daysSince(r.lastDate);
+      const st = statusFromDays(d);
 
-    const d = daysWithout(r.dataObj);
-    const st = status(d);
+      return `
+        <tr>
+          <td>${r.cnpj || ""}</td>
+          <td>${r.contrato || ""}</td>
+          <td>${r.obra || ""}</td>
+          <td>${r.volume ? r.volume.toLocaleString("pt-BR") : ""}</td>
+          <td>${formatDateBR(r.lastDate)}</td>
+          <td>${formatDaysSmart(d)}</td>
+          <td><span class="${st.css}">${st.text}</span></td>
+        </tr>
+      `;
+    }).join("");
+  }
 
-    return `
-      <tr>
-        <td>${r.cnpj}</td>
-        <td>${r.contrato}</td>
-        <td>${r.obra}</td>
-        <td>${r.volume}</td>
-        <td>${formatDate(r.dataObj)}</td>
-        <td>${formatDays(d)}</td>
-        <td><span class="${st[1]}">${st[0]}</span></td>
-      </tr>
-    `;
+  // KPIs
+  const contratos = new Set(sorted.map(r => r.contrato).filter(Boolean)).size;
+  const clientes = new Set(sorted.map(r => r.cnpj).filter(Boolean)).size;
+  const volumeTotal = sorted.reduce((acc, r) => acc + (r.volume || 0), 0);
 
-  }).join("");
+  if (kpiContracts) kpiContracts.textContent = String(contratos);
+  if (kpiClients) kpiClients.textContent = String(clientes);
+  if (kpiVolume) kpiVolume.textContent = volumeTotal ? volumeTotal.toLocaleString("pt-BR") : "0";
 
-  document.getElementById("contratos").textContent =
-    new Set(sorted.map(i=>i.contrato)).size;
-
-  document.getElementById("clientes").textContent =
-    new Set(sorted.map(i=>i.cnpj)).size;
-
-  document.getElementById("volume").textContent =
-    sorted.reduce((a,b)=>a + b.volume,0);
-
-  const counters = {ok:0,warn:0,grave:0,action:0};
-
-  sorted.forEach(r=>{
-    const s = status(daysWithout(r.dataObj))[1];
-    counters[s]++;
+  const counters = { ok: 0, warn: 0, grave: 0, action: 0 };
+  sorted.forEach(r => {
+    const d = daysSince(r.lastDate);
+    const st = statusFromDays(d).css;
+    if (st.includes("ok")) counters.ok++;
+    else if (st.includes("warn")) counters.warn++;
+    else if (st.includes("grave")) counters.grave++;
+    else if (st.includes("action")) counters.action++;
   });
 
-  document.getElementById("ok").textContent = counters.ok;
-  document.getElementById("warn").textContent = counters.warn;
-  document.getElementById("grave").textContent = counters.grave;
-  document.getElementById("action").textContent = counters.action;
+  if (kpiOK) kpiOK.textContent = String(counters.ok);
+  if (kpiWarn) kpiWarn.textContent = String(counters.warn);
+  if (kpiGrave) kpiGrave.textContent = String(counters.grave);
+  if (kpiAction) kpiAction.textContent = String(counters.action);
+
+  if (buildInfo) {
+    const now = new Date();
+    buildInfo.textContent = `Build atualizado • ${now.toLocaleDateString("pt-BR")} ${now.toLocaleTimeString("pt-BR")}`;
+  }
 }
 
-/* ================= LIMPAR ================= */
+/* ======= IMPORTAÇÃO (ADMIN) ======= */
+async function loadXlsx(file) {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-document.getElementById("clearBtn").addEventListener("click", ()=>{
-  rawData = [];
-  tableBody.innerHTML = "";
+  allRows = normalizeRows(rows);
+
+  rebuildFilters();
+  applyFilters();
+
+  setStatus(`XLSX carregado: ${rows.length} linhas`);
+}
+
+/* ======= EVENTOS ======= */
+if (loadFileBtn) {
+  loadFileBtn.addEventListener("click", async () => {
+    if (role !== "admin") return;
+
+    const file = fileInput?.files?.[0];
+    if (!file) {
+      setStatus("Selecione um XLSX.");
+      return;
+    }
+
+    try {
+      setStatus("Carregando XLSX...");
+      await loadXlsx(file);
+    } catch (e) {
+      console.error(e);
+      setStatus("Erro ao ler o XLSX. Verifique o arquivo.");
+    }
+  });
+}
+
+if (clearBtn) {
+  clearBtn.addEventListener("click", () => {
+    if (role !== "admin") return;
+
+    allRows = [];
+    filteredRows = [];
+    rebuildFilters();
+    render();
+    setStatus("Dados removidos.");
+  });
+}
+
+if (yearFilter) yearFilter.addEventListener("change", applyFilters);
+if (monthFilter) monthFilter.addEventListener("change", applyFilters);
+
+/* ======= INÍCIO ======= */
+(function init() {
+  // Não carrega demo. Não inventa dados.
+  // Sempre inicia vazio.
+  allRows = [];
+  filteredRows = [];
+  rebuildFilters();
   render();
-});
+  setStatus(role === "admin" ? "Aguardando importação…" : "Acesso de usuário (visualização).");
+})();
