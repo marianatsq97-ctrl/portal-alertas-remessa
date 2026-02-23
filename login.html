@@ -30,8 +30,14 @@ function login(){
   const u = document.getElementById("user").value.trim();
   const p = document.getElementById("pass").value.trim();
 
-  if((u==="admin" && p==="1234") || (u==="usuario" && p==="1234")){
-    localStorage.setItem("auth","true");
+  if(u==="admin" && p==="1234"){
+    localStorage.setItem("role","admin");
+    window.location.href="index.html";
+    return;
+  }
+
+  if(u==="usuario" && p==="1234"){
+    localStorage.setItem("role","user");
     window.location.href="index.html";
     return;
   }
