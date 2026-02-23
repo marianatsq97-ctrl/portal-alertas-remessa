@@ -7,38 +7,32 @@ body{
 
 /* LOGIN */
 
-.auth-body{
+.login-body{
   display:flex;
   justify-content:center;
   align-items:center;
   height:100vh;
 }
 
-.auth-card{
+.login-card{
   background:#0d1b3a;
   padding:50px;
   border-radius:20px;
-  width:400px;
+  width:420px;
   text-align:center;
-  box-shadow:0 20px 40px rgba(0,0,0,.5);
+  box-shadow:0 20px 40px rgba(0,0,0,.6);
 }
 
-.auth-logo{
-  width:150px;
+.login-logo{
+  width:180px;
   margin-bottom:20px;
 }
 
-.auth-title{
+.login-title{
   color:#ff8c2f;
-  margin-bottom:5px;
 }
 
-.auth-subtitle{
-  color:#ccc;
-  margin-bottom:30px;
-}
-
-.auth-input{
+.login-input{
   width:100%;
   padding:12px;
   margin-bottom:15px;
@@ -48,7 +42,7 @@ body{
   color:white;
 }
 
-.auth-btn{
+.login-btn{
   width:100%;
   padding:15px;
   border-radius:30px;
@@ -58,8 +52,8 @@ body{
   cursor:pointer;
 }
 
-.auth-msg{
-  margin-top:15px;
+.login-msg{
+  margin-top:10px;
   color:#ff5b5b;
 }
 
@@ -94,4 +88,21 @@ body{
 
 .content{
   padding:40px;
+}
+
+table{
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+}
+
+th, td{
+  padding:10px;
+  border-bottom:1px solid #1e2d4d;
+}
+
+.kpis{
+  display:flex;
+  gap:30px;
+  margin-bottom:20px;
 }
