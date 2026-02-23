@@ -1,3 +1,7 @@
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
   font-family:Arial, Helvetica, sans-serif;
@@ -105,4 +109,25 @@ th, td{
   display:flex;
   gap:30px;
   margin-bottom:20px;
+}
+
+#buildInfo{
+  margin-top:16px;
+  color:#b6c5e0;
+}
+
+@media (max-width: 700px){
+  .login-card{
+    width:calc(100% - 32px);
+    padding:32px 24px;
+  }
+
+  .content{
+    padding:24px 16px;
+  }
+
+  .kpis{
+    flex-direction:column;
+    gap:10px;
+  }
 }
