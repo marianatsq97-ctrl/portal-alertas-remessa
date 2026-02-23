@@ -1,217 +1,162 @@
-const tableBody = document.getElementById("tableBody");
-const recordsInfo = document.getElementById("recordsInfo");
+/* ================= LOGIN ================= */
+
+const role = localStorage.getItem("role");
+if(!role){
+  window.location.href = "login.html";
+}
+
+function logout(){
+  localStorage.removeItem("role");
+  window.location.href = "login.html";
+}
+
+if(role === "user"){
+  document.getElementById("adminPanel").style.display = "none";
+}
+
+/* ================= VARIÁVEIS ================= */
+
 const fileInput = document.getElementById("fileInput");
-const fileName = document.getElementById("fileName");
+const tableBody = document.getElementById("tableBody");
 const statusMsg = document.getElementById("statusMsg");
-const chartBars = document.getElementById("chartBars");
-const chartLabels = document.getElementById("chartLabels");
-const monthFilter = document.getElementById("monthFilter");
-const yearFilter = document.getElementById("yearFilter");
 
 let rawData = [];
 
-/* ===========================
-   FUNÇÕES DE DATA FLEXÍVEL
-=========================== */
+/* ================= UTIL ================= */
 
-function parseDate(value) {
-  if (!value) return null;
-
-  if (value instanceof Date) return value;
-
-  if (typeof value === "number") {
-    return new Date(Math.round((value - 25569) * 86400 * 1000));
+function parseDate(v){
+  if(!v) return null;
+  if(v instanceof Date) return v;
+  if(typeof v === "number"){
+    return new Date((v - 25569) * 86400 * 1000);
   }
-
-  const str = String(value).trim();
-
-  const br = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (br) return new Date(br[3], br[2] - 1, br[1]);
-
-  const iso = new Date(str);
-  if (!isNaN(iso)) return iso;
-
-  return null;
+  const parts = String(v).split("/");
+  if(parts.length === 3){
+    return new Date(parts[2], parts[1]-1, parts[0]);
+  }
+  return new Date(v);
 }
 
-function daysWithoutShipment(dateValue) {
-  const date = parseDate(dateValue);
-  if (!date) return 0;
-  const today = new Date();
-  return Math.floor((today - date) / 86400000);
+function formatDate(d){
+  if(!d || isNaN(d)) return "";
+  return d.toLocaleDateString("pt-BR");
 }
 
-function statusFromDays(days) {
-  if (days <= 7) return { text: "OK", css: "ok" };
-  if (days <= 14) return { text: "Atenção", css: "warn" };
-  if (days <= 21) return { text: "Atenção grave", css: "grave" };
-  return { text: "Plano de ação", css: "action" };
+function daysWithout(d){
+  if(!d) return null;
+  return Math.floor((new Date() - d)/86400000);
 }
 
-/* ===========================
-   FILTROS
-=========================== */
-
-function populateFilters(data) {
-  const dates = data.map(i => parseDate(i.data)).filter(Boolean);
-
-  const years = [...new Set(dates.map(d => d.getFullYear()))].sort();
-  const months = [...new Set(dates.map(d => d.getMonth() + 1))].sort((a,b)=>a-b);
-
-  yearFilter.innerHTML =
-    '<option value="todos">Ano: todos</option>' +
-    years.map(y => `<option value="${y}">Ano: ${y}</option>`).join("");
-
-  monthFilter.innerHTML =
-    '<option value="todos">Mês: todos</option>' +
-    months.map(m => `<option value="${m}">Mês: ${String(m).padStart(2,"0")}</option>`).join("");
+function formatDays(days){
+  if(days === null) return "";
+  if(days > 365) return (days/365).toFixed(1) + " anos";
+  if(days > 31) return (days/30).toFixed(1) + " meses";
+  return days + " dias";
 }
 
-function filteredData() {
-  return rawData.filter(item => {
-    const dt = parseDate(item.data);
-    if (!dt) return false;
-
-    const yearOk =
-      yearFilter.value === "todos" ||
-      String(dt.getFullYear()) === yearFilter.value;
-
-    const monthOk =
-      monthFilter.value === "todos" ||
-      String(dt.getMonth() + 1) === monthFilter.value;
-
-    return yearOk && monthOk;
-  });
+function status(days){
+  if(days <= 7) return ["OK","ok"];
+  if(days <= 14) return ["Atenção","warn"];
+  if(days <= 21) return ["Atenção grave","grave"];
+  return ["Plano de ação","action"];
 }
 
-/* ===========================
-   RENDER
-=========================== */
+/* ================= IMPORTAÇÃO ================= */
 
-function updateSummary(data) {
-  const count = { ok: 0, warn: 0, grave: 0, action: 0 };
+document.getElementById("loadFileBtn").addEventListener("click", async ()=>{
 
-  data.forEach(item => {
-    const st = statusFromDays(daysWithoutShipment(item.data));
-    count[st.css] += 1;
-  });
-
-  document.getElementById("ok").textContent = count.ok;
-  document.getElementById("warn").textContent = count.warn;
-  document.getElementById("grave").textContent = count.grave;
-  document.getElementById("action").textContent = count.action;
-
-  document.getElementById("contratos").textContent =
-    new Set(data.map(i => i.contrato).filter(Boolean)).size;
-
-  document.getElementById("clientes").textContent =
-    new Set(data.map(i => i.cliente).filter(Boolean)).size;
-
-  document.getElementById("volume").textContent =
-    data.reduce((acc, i) => acc + Number(i.volume || 0), 0);
-}
-
-function renderTable(data) {
-  const sorted = [...data].sort(
-    (a, b) =>
-      daysWithoutShipment(b.data) -
-      daysWithoutShipment(a.data)
-  );
-
-  tableBody.innerHTML = sorted.map(item => {
-    const days = daysWithoutShipment(item.data);
-    const status = statusFromDays(days);
-
-    return `
-      <tr>
-        <td>${item.cliente || "-"}</td>
-        <td>${item.contrato || "-"}</td>
-        <td>${item.obra || "-"}</td>
-        <td>${item.volume || 0}</td>
-        <td>${item.data || "-"}</td>
-        <td>${days} dias</td>
-        <td><span class="badge ${status.css}">${status.text}</span></td>
-      </tr>
-    `;
-  }).join("");
-
-  recordsInfo.textContent =
-    `Mostrando ${sorted.length} registros`;
-}
-
-function renderAll() {
-  const data = filteredData();
-  updateSummary(data);
-  renderTable(data);
-}
-
-/* ===========================
-   IMPORTAÇÃO XLSX REAL
-=========================== */
-
-async function readSelectedFile() {
-  const file = fileInput.files?.[0];
-  if (!file) {
-    statusMsg.textContent = "Selecione um arquivo.";
+  const file = fileInput.files[0];
+  if(!file){
+    statusMsg.textContent = "Selecione um arquivo";
     return;
   }
 
-  fileName.textContent = file.name;
-  statusMsg.textContent = "Carregando...";
+  const buffer = await file.arrayBuffer();
+  const wb = XLSX.read(buffer);
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(sheet,{defval:""});
 
-  const reader = new FileReader();
+  rawData = rows.map(r=>{
 
-  reader.onload = function (e) {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
+    const volume = parseFloat(
+      String(r["VOLUME"] || r["Volume"] || r["Quantidade"] || 0)
+      .replace(/\./g,"")
+      .replace(",",".")
+    ) || 0;
 
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
+    const dataObj = parseDate(
+      r["DATA"] || r["Data"] || r["Última remessa"]
+    );
 
-    const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    return {
+      cnpj: r["CNPJ"] || r["CNPJ / Cliente"] || "",
+      contrato: r["CONTRATO"] || r["Contrato"] || "",
+      obra: r["OBRA"] || r["Nome da obra"] || "",
+      volume,
+      dataObj
+    };
 
-    rawData = json
-      .filter(row =>
-        row["Contrato"] ||
-        row["contrato"] ||
-        row["Cliente"] ||
-        row["cliente"]
-      )
-      .map(row => ({
-        contrato: row["Contrato"] || row["contrato"] || "",
-        cliente: row["Cliente"] || row["cliente"] || "",
-        obra: row["Nome da obra"] || row["obra"] || "",
-        volume: row["Volume da obra"] || row["volume"] || 0,
-        data: row["Data da remessa"] || row["data"] || ""
-      }));
-
-    populateFilters(rawData);
-    renderAll();
-
-    statusMsg.textContent =
-      `Arquivo carregado. Total linhas: ${rawData.length}`;
-  };
-
-  reader.readAsArrayBuffer(file);
-}
-
-/* ===========================
-   EVENTOS
-=========================== */
-
-document
-  .getElementById("loadFileBtn")
-  .addEventListener("click", readSelectedFile);
-
-document
-  .getElementById("clearBtn")
-  .addEventListener("click", () => {
-    rawData = [];
-    renderAll();
-    statusMsg.textContent = "Dados removidos.";
   });
 
-yearFilter.addEventListener("change", renderAll);
-monthFilter.addEventListener("change", renderAll);
+  render();
+  statusMsg.textContent = rawData.length + " linhas carregadas";
+});
 
-/* IMPORTANTE: NÃO CARREGA DEMO AUTOMÁTICO */
+/* ================= RENDER ================= */
+
+function render(){
+
+  const sorted = [...rawData].sort((a,b)=>{
+    const da = daysWithout(a.dataObj);
+    const db = daysWithout(b.dataObj);
+    return db - da;
+  });
+
+  tableBody.innerHTML = sorted.map(r=>{
+
+    const d = daysWithout(r.dataObj);
+    const st = status(d);
+
+    return `
+      <tr>
+        <td>${r.cnpj}</td>
+        <td>${r.contrato}</td>
+        <td>${r.obra}</td>
+        <td>${r.volume}</td>
+        <td>${formatDate(r.dataObj)}</td>
+        <td>${formatDays(d)}</td>
+        <td><span class="${st[1]}">${st[0]}</span></td>
+      </tr>
+    `;
+
+  }).join("");
+
+  document.getElementById("contratos").textContent =
+    new Set(sorted.map(i=>i.contrato)).size;
+
+  document.getElementById("clientes").textContent =
+    new Set(sorted.map(i=>i.cnpj)).size;
+
+  document.getElementById("volume").textContent =
+    sorted.reduce((a,b)=>a + b.volume,0);
+
+  const counters = {ok:0,warn:0,grave:0,action:0};
+
+  sorted.forEach(r=>{
+    const s = status(daysWithout(r.dataObj))[1];
+    counters[s]++;
+  });
+
+  document.getElementById("ok").textContent = counters.ok;
+  document.getElementById("warn").textContent = counters.warn;
+  document.getElementById("grave").textContent = counters.grave;
+  document.getElementById("action").textContent = counters.action;
+}
+
+/* ================= LIMPAR ================= */
+
+document.getElementById("clearBtn").addEventListener("click", ()=>{
+  rawData = [];
+  tableBody.innerHTML = "";
+  render();
+});
