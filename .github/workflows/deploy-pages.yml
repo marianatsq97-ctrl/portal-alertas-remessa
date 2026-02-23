@@ -2,7 +2,7 @@ name: Deploy portal no GitHub Pages
 
 on:
   push:
-    branches: ["main", "work"]
+    branches: ["**"]
   workflow_dispatch:
 
 permissions:
