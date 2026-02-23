@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Alertas</title>
+<title>Portal de Alertas - Remessas</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 
 <body>
 
 <script>
-if(!localStorage.getItem("role")){
+const role = localStorage.getItem("role");
+if(!role){
   window.location.href="login.html";
 }
 </script>
@@ -26,24 +28,46 @@ if(!localStorage.getItem("role")){
 
 <main class="content">
 
-  <h3>Bem-vindo ao sistema</h3>
-  <p>Seu nível de acesso: <strong id="roleInfo"></strong></p>
+<div id="adminPanel">
 
-  <div id="adminArea" style="display:none;">
-    <h4>Área exclusiva do ADMIN</h4>
-    <p>Pode importar arquivos e gerenciar dados.</p>
-  </div>
+  <input type="file" id="fileInput" accept=".xlsx">
+  <button id="loadFileBtn">Carregar arquivo</button>
+  <button id="clearBtn">Excluir dados</button>
+
+  <div id="statusMsg"></div>
+
+</div>
+
+<h3>Resumo</h3>
+
+<div class="kpis">
+  <div>Contratos: <span id="kpiContracts">0</span></div>
+  <div>Clientes: <span id="kpiClients">0</span></div>
+  <div>Volume: <span id="kpiVolume">0</span></div>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>CNPJ</th>
+<th>Contrato</th>
+<th>Obra</th>
+<th>Volume</th>
+<th>Última remessa</th>
+<th>Dias</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<div id="buildInfo"></div>
 
 </main>
 
+<script src="app.js"></script>
+
 <script>
-const role = localStorage.getItem("role");
-document.getElementById("roleInfo").textContent = role;
-
-if(role==="admin"){
-  document.getElementById("adminArea").style.display="block";
-}
-
 function logout(){
   localStorage.removeItem("role");
   window.location.href="login.html";
