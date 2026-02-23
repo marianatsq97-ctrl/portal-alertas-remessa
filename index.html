@@ -17,53 +17,64 @@ if(!role){
 }
 </script>
 
-<header class="topbar">
-  <div class="logo-area">
-    <img src="logo-areia-ana.png" class="logo-header">
-    <h2>Portal de Alertas - Remessas</h2>
+<header class="header">
+  <div class="header-left">
+    <img src="logo-areia-ana.png" class="logo">
+    <h1>Portal de Alertas - Remessas</h1>
   </div>
-
-  <button class="logout-btn" onclick="logout()">Sair</button>
+  <button onclick="logout()" class="btn-logout">Sair</button>
 </header>
 
-<main class="content">
+<div class="container">
 
-<div id="adminPanel">
+  <!-- BLOCO IMPORTAÇÃO -->
+  <div class="card" id="adminPanel">
+    <div class="import-row">
+      <input type="file" id="fileInput" accept=".xlsx">
+      <button id="loadFileBtn" class="btn-primary">Carregar arquivo</button>
+      <button id="clearBtn" class="btn-danger">Excluir dados</button>
+    </div>
+    <div id="statusMsg" class="status"></div>
+  </div>
 
-  <input type="file" id="fileInput" accept=".xlsx">
-  <button id="loadFileBtn">Carregar arquivo</button>
-  <button id="clearBtn">Excluir dados</button>
+  <!-- RESUMO -->
+  <div class="card">
+    <h2>Resumo</h2>
+    <div class="kpis">
+      <div class="kpi">
+        <span>Contratos</span>
+        <strong id="kpiContracts">0</strong>
+      </div>
+      <div class="kpi">
+        <span>Clientes</span>
+        <strong id="kpiClients">0</strong>
+      </div>
+      <div class="kpi">
+        <span>Volume</span>
+        <strong id="kpiVolume">0</strong>
+      </div>
+    </div>
+  </div>
 
-  <div id="statusMsg"></div>
+  <!-- TABELA -->
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>CNPJ</th>
+          <th>Contrato</th>
+          <th>Obra</th>
+          <th>Volume</th>
+          <th>Última remessa</th>
+          <th>Dias</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 
 </div>
-
-<h3>Resumo</h3>
-
-<div class="kpis">
-  <div>Contratos: <span id="kpiContracts">0</span></div>
-  <div>Clientes: <span id="kpiClients">0</span></div>
-  <div>Volume: <span id="kpiVolume">0</span></div>
-</div>
-
-<table>
-<thead>
-<tr>
-<th>CNPJ</th>
-<th>Contrato</th>
-<th>Obra</th>
-<th>Volume</th>
-<th>Última remessa</th>
-<th>Dias</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
-
-<div id="buildInfo"></div>
-
-</main>
 
 <script src="app.js"></script>
 
