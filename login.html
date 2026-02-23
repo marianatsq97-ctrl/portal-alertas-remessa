@@ -1,46 +1,101 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login - Portal Remessas</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal de Alertas - Login</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 
-<body class="login-body">
+<body class="auth-body">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img class="auth-logo" src="logo-areia-ana.png" alt="Areia Ana" />
+        <h1 class="auth-title">Portal de Alertas</h1>
+        <p class="auth-subtitle">Acesso restrito</p>
+      </div>
 
-<div class="login-box">
-  <h2>Portal de Alertas</h2>
+      <div class="auth-form">
+        <input
+          id="pass"
+          class="auth-input"
+          type="password"
+          placeholder="Digite a senha"
+          autocomplete="current-password"
+        />
+        <button id="btnEnter" class="auth-btn">Entrar</button>
 
-  <input type="text" id="user" placeholder="Usuário">
-  <input type="password" id="pass" placeholder="Senha">
-
-  <button onclick="login()">Entrar</button>
-
-  <div class="login-info">
-    <p><b>Admin:</b> admin / 1234</p>
-    <p><b>Usuário:</b> usuario / 1234</p>
+        <div id="authMsg" class="auth-msg" aria-live="polite"></div>
+      </div>
+    </div>
   </div>
-</div>
 
-<script>
-function login(){
-  const u = document.getElementById("user").value;
-  const p = document.getElementById("pass").value;
+  <script>
+    // =========================
+    // IMPORTANTÍSSIMO
+    // Aqui NÃO EXISTE login/senha exposto.
+    // Você vai colocar APENAS o HASH (SHA-256) da sua senha.
+    //
+    // Como gerar seu hash:
+    // 1) Abra o login.html no navegador
+    // 2) Aperte F12 > Console
+    // 3) Cole: await window.genHash("SUA_SENHA_AQUI")
+    // 4) Copie o resultado e cole em ADMIN_HASH e USER_HASH
+    // =========================
 
-  if(u==="admin" && p==="1234"){
-    localStorage.setItem("role","admin");
-    window.location.href="index.html";
-  }
-  else if(u==="usuario" && p==="1234"){
-    localStorage.setItem("role","user");
-    window.location.href="index.html";
-  }
-  else{
-    alert("Usuário inválido");
-  }
-}
-</script>
+    const ADMIN_HASH = "COLE_AQUI_O_HASH_DA_SENHA_ADMIN";
+    const USER_HASH  = "COLE_AQUI_O_HASH_DA_SENHA_USUARIO";
 
+    async function sha256(text) {
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest("SHA-256", enc);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    // helper para você gerar hash no console
+    window.genHash = async (senha) => {
+      const h = await sha256(senha);
+      console.log("SHA-256:", h);
+      return h;
+    };
+
+    function setMsg(t) {
+      const el = document.getElementById("authMsg");
+      el.textContent = t || "";
+    }
+
+    async function login() {
+      setMsg("");
+      const pass = document.getElementById("pass").value || "";
+      if (!pass.trim()) {
+        setMsg("Digite a senha.");
+        return;
+      }
+
+      const hash = await sha256(pass);
+
+      if (hash === ADMIN_HASH) {
+        localStorage.setItem("role", "admin");
+        window.location.href = "index.html";
+        return;
+      }
+
+      if (hash === USER_HASH) {
+        localStorage.setItem("role", "user");
+        window.location.href = "index.html";
+        return;
+      }
+
+      setMsg("Senha inválida.");
+      document.getElementById("pass").value = "";
+      document.getElementById("pass").focus();
+    }
+
+    document.getElementById("btnEnter").addEventListener("click", login);
+    document.getElementById("pass").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+  </script>
 </body>
 </html>
