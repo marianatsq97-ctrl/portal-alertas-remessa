@@ -1,121 +1,54 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portal de Alertas - Remessas</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal de Alertas</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <main class="dashboard">
-    <header class="topbar">
-      <div class="brand">
-        <img src="logo-areia-ana.png" class="logo" alt="Areia Ana" />
-        <div>
-          <h1>Portal de Alertas - Remessas</h1>
-          <p class="subtitle">Controle de clientes sem remessa</p>
-        </div>
-      </div>
 
-      <button class="btn ghost" id="btnLogout">Sair</button>
-    </header>
+<script>
+if(!localStorage.getItem("role")){
+  window.location.href="login.html";
+}
+</script>
 
-    <!-- ADMIN: só aparece se role=admin -->
-    <section class="panel controls" id="adminPanel">
-      <div class="upload-row">
-        <input type="file" id="fileInput" accept=".xlsx,.xls" />
-        <button id="loadFileBtn" class="btn primary">Carregar arquivo</button>
-        <button id="clearBtn" class="btn danger">Excluir dados</button>
-      </div>
+<header class="topbar">
+  <div class="logo-area">
+    <img src="logo-areia-ana.png" class="logo-header">
+    <h2>Portal de Alertas - Remessas</h2>
+  </div>
 
-      <div class="filters-row">
-        <select id="yearFilter">
-          <option value="">Ano: todos</option>
-        </select>
+  <button class="logout-btn" onclick="logout()">Sair</button>
+</header>
 
-        <select id="monthFilter">
-          <option value="">Mês: todos</option>
-        </select>
-      </div>
+<main class="content">
 
-      <div class="status-row">
-        <span id="statusMsg">Aguardando importação…</span>
-      </div>
-    </section>
+  <h3>Bem-vindo ao sistema</h3>
+  <p>Seu nível de acesso: <strong id="roleInfo"></strong></p>
 
-    <section class="panel">
-      <h2>Resumo</h2>
+  <div id="adminArea" style="display:none;">
+    <h4>Área exclusiva do ADMIN</h4>
+    <p>Pode importar arquivos e gerenciar dados.</p>
+  </div>
 
-      <div class="summary-grid">
-        <div class="kpi">
-          <div class="kpi-number" id="kpiContracts">0</div>
-          <div class="kpi-label">Contratos exibidos</div>
-        </div>
+</main>
 
-        <div class="kpi">
-          <div class="kpi-number" id="kpiClients">0</div>
-          <div class="kpi-label">Clientes únicos (CNPJ)</div>
-        </div>
+<script>
+const role = localStorage.getItem("role");
+document.getElementById("roleInfo").textContent = role;
 
-        <div class="kpi">
-          <div class="kpi-number" id="kpiVolume">0</div>
-          <div class="kpi-label">Volume total da obra</div>
-        </div>
-      </div>
+if(role==="admin"){
+  document.getElementById("adminArea").style.display="block";
+}
 
-      <div class="status-cards">
-        <div class="status-card ok">
-          <div class="status-title">OK</div>
-          <div class="status-number" id="kpiOK">0</div>
-          <div class="status-sub">0 a 7 dias sem remessa</div>
-        </div>
+function logout(){
+  localStorage.removeItem("role");
+  window.location.href="login.html";
+}
+</script>
 
-        <div class="status-card warn">
-          <div class="status-title">Atenção</div>
-          <div class="status-number" id="kpiWarn">0</div>
-          <div class="status-sub">8 a 14 dias sem remessa</div>
-        </div>
-
-        <div class="status-card grave">
-          <div class="status-title">Atenção grave</div>
-          <div class="status-number" id="kpiGrave">0</div>
-          <div class="status-sub">15 a 21 dias sem remessa</div>
-        </div>
-
-        <div class="status-card action">
-          <div class="status-title">Plano de ação</div>
-          <div class="status-number" id="kpiAction">0</div>
-          <div class="status-sub">&gt; 21 dias sem remessa</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Detalhamento</h2>
-
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>CNPJ</th>
-              <th>Contrato</th>
-              <th>Nome da obra</th>
-              <th>Volume da obra</th>
-              <th>Última remessa</th>
-              <th>Dias sem remessa</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-
-      <div class="footer-note" id="buildInfo"></div>
-    </section>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="app.js"></script>
 </body>
 </html>
