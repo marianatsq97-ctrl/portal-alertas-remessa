@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Alertas - Login</title>
+<title>Portal de Alertas</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="auth-body">
+<body class="login-body">
 
-<div class="auth-card">
+<div class="login-card">
 
-  <img src="logo-areia-ana.png" class="auth-logo">
+  <img src="logo-areia-ana.png" class="login-logo">
 
-  <h1 class="auth-title">Portal de Alertas</h1>
-  <p class="auth-subtitle">Acesso restrito</p>
+  <h1 class="login-title">Portal de Alertas</h1>
+  <p class="login-sub">Acesso restrito</p>
 
-  <input id="user" class="auth-input" type="text" placeholder="Usuário">
-  <input id="pass" class="auth-input" type="password" placeholder="Senha">
+  <input id="user" type="text" placeholder="Usuário" class="login-input">
+  <input id="pass" type="password" placeholder="Senha" class="login-input">
 
-  <button id="btnEnter" class="auth-btn">Entrar</button>
+  <button onclick="login()" class="login-btn">Entrar</button>
 
-  <div id="authMsg" class="auth-msg"></div>
+  <div id="msg" class="login-msg"></div>
 
 </div>
 
@@ -30,25 +30,14 @@ function login(){
   const u = document.getElementById("user").value.trim();
   const p = document.getElementById("pass").value.trim();
 
-  if(u==="admin" && p==="1234"){
-    localStorage.setItem("role","admin");
+  if((u==="admin" && p==="1234") || (u==="usuario" && p==="1234")){
+    localStorage.setItem("auth","true");
     window.location.href="index.html";
     return;
   }
 
-  if(u==="usuario" && p==="1234"){
-    localStorage.setItem("role","user");
-    window.location.href="index.html";
-    return;
-  }
-
-  document.getElementById("authMsg").textContent="Usuário ou senha inválidos.";
+  document.getElementById("msg").textContent="Usuário ou senha inválidos";
 }
-
-document.getElementById("btnEnter").addEventListener("click",login);
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="Enter") login();
-});
 </script>
 
 </body>
