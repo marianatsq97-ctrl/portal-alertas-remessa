@@ -9,6 +9,13 @@ Para abrir o portal funcionando, use a URL do **GitHub Pages** (não a tela de c
 - Formato: `https://<usuario>.github.io/portal-alertas-remessa/`
 - Exemplo: `https://mariantasq97-ctrl.github.io/portal-alertas-remessa/`
 
+## Publicação (GitHub Pages)
+
+O deploy automático do portal está configurado para a branch **main**.
+
+- Commits em branches de trabalho podem aparecer com erro de deploy (ícone vermelho) por regra do ambiente `github-pages`.
+- Para publicar atualização no site, faça merge/push para `main` ou execute manualmente o workflow de deploy.
+
 Credenciais de acesso:
 
 - `admin / 1234` (importa arquivos e visualiza)
